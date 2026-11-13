@@ -321,6 +321,107 @@
     @apply block;
   }
 
+  .recall-select {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+  }
+
+  .recall-select-card {
+    @apply flex flex-col gap-3;
+  }
+
+  .recall-head {
+    @apply flex-row items-center justify-between;
+  }
+
+  .recall-card {
+    @apply card mx-auto flex max-w-xl flex-col items-center gap-4 py-8 text-center;
+  }
+
+  .recall-progress {
+    @apply text-sm font-bold text-muted;
+  }
+
+  .recall-word {
+    @apply break-words text-5xl font-extrabold leading-tight sm:text-6xl;
+  }
+
+  .recall-actions {
+    @apply mt-2 flex w-full flex-col gap-3 sm:flex-row;
+  }
+
+  .recall-actions .btn {
+    @apply flex-1 py-4 text-lg;
+  }
+
+  .btn-known {
+    @apply bg-teal text-white;
+  }
+
+  .btn-unknown {
+    @apply bg-coral text-ink;
+  }
+
+  .recall-answer {
+    @apply text-left;
+  }
+
+  .recall-answer .recall-word {
+    @apply w-full text-center;
+  }
+
+  .recall-result {
+    @apply w-full rounded-2xl border-2 border-ink px-4 py-2 text-center font-bold;
+  }
+
+  .recall-result.is-known {
+    @apply bg-teal/20 text-teal-dark;
+  }
+
+  .recall-result.is-unknown {
+    @apply bg-coral/20 text-coral-dark;
+  }
+
+  .recall-stars {
+    @apply flex items-center gap-2 text-sm;
+  }
+
+  .recall-answer .translation-lines,
+  .recall-answer .examples {
+    @apply w-full;
+  }
+
+  .empty-recall {
+    @apply text-lg font-bold text-muted;
+  }
+
+  .summary-card {
+    @apply mx-auto mt-10 flex max-w-md flex-col items-center gap-4 text-center;
+  }
+
+  .summary-stats {
+    @apply flex w-full justify-around gap-2;
+  }
+
+  .stat-number {
+    @apply block text-3xl font-extrabold;
+  }
+
+  .stat-number.is-known {
+    @apply text-teal-dark;
+  }
+
+  .stat-number.is-unknown {
+    @apply text-coral-dark;
+  }
+
+  .stat-label {
+    @apply text-xs font-bold text-muted;
+  }
+
+  .center-actions {
+    @apply justify-center;
+  }
+
   /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
   .app-nav {
     @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;

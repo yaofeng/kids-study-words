@@ -1,0 +1,30 @@
+{{define "content"}}
+<header class="page-head">
+  <h1 class="page-title">回忆单词</h1>
+  <p class="page-subtitle">选一个生词本，看看还记得多少。</p>
+</header>
+
+{{if .Notebooks}}
+<ul class="recall-select">
+  {{range .Notebooks}}
+  <li class="card recall-select-card">
+    <div class="notebook-head">
+      <h2 class="notebook-name">{{.Name}}</h2>
+      {{if .IsDefault}}<span class="badge badge-default">默认</span>{{end}}
+    </div>
+    <p class="notebook-meta">{{.WordCount}} 个单词</p>
+    {{if gt .WordCount 0}}
+    <a class="btn btn-primary" href="/recall/{{.ID}}">开始回忆</a>
+    {{else}}
+    <p class="muted-text">还没有单词，先去<a class="link" href="/lookup">查词</a>加入吧。</p>
+    {{end}}
+  </li>
+  {{end}}
+</ul>
+{{else}}
+<section class="card empty-state">
+  {{template "owl" .}}
+  <p>还没有生词本，先建一个吧。</p>
+</section>
+{{end}}
+{{end}}

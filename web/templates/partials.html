@@ -97,3 +97,55 @@
 <p class="muted-text">{{.Message}}</p>
 {{end}}
 {{end}}
+
+{{define "recall_card"}}
+<article class="recall-card" id="recall-card">
+  <p class="recall-progress">本次认识 {{.State.Known}} · 不认识 {{.State.Unknown}}</p>
+  {{if .Word}}
+  <div class="recall-word" lang="en">{{.Word.Word}}</div>
+  {{if .Word.Phonetic}}<p class="word-phonetic">{{.Word.Phonetic}}</p>{{end}}
+  <div class="recall-actions">
+    <button class="btn btn-unknown" type="button"
+            hx-post="/recall/{{$.Notebook.ID}}/answer"
+            hx-vals='{"word_id":"{{.Word.ID}}","known":"0"}'
+            hx-target="#recall-card" hx-swap="outerHTML">不认识</button>
+    <button class="btn btn-known" type="button"
+            hx-post="/recall/{{$.Notebook.ID}}/answer"
+            hx-vals='{"word_id":"{{.Word.ID}}","known":"1"}'
+            hx-target="#recall-card" hx-swap="outerHTML">认识</button>
+  </div>
+  {{else}}
+  <p class="empty-recall">这个生词本还没有单词。</p>
+  <a class="btn" href="/lookup">去查词</a>
+  {{end}}
+</article>
+{{end}}
+
+{{define "recall_answer"}}
+<article class="recall-card recall-answer" id="recall-card">
+  <p class="recall-progress">本次认识 {{.State.Known}} · 不认识 {{.State.Unknown}}</p>
+  <div class="recall-word" lang="en">{{.Word.Word}}</div>
+  <p class="recall-result {{if .Log.Known}}is-known{{else}}is-unknown{{end}}">
+    {{if .Log.Known}}认识{{else}}不认识{{end}} · 第 {{.Log.ReviewCount}} 次回忆
+  </p>
+  <p class="recall-stars">{{template "stars" .Word.Proficiency}} <span class="muted-text">{{StarLabel .Word.Proficiency}}</span></p>
+  {{if .Word.Translation}}
+  <ul class="translation-lines">
+    {{range Lines .Word.Translation}}<li>{{.}}</li>{{end}}
+  </ul>
+  {{end}}
+  {{if .Word.Examples}}
+  <div class="examples">
+    {{range .Word.Examples}}
+    <div class="example">
+      <p class="example-en">{{.EN}}</p>
+      <p class="example-zh">{{.ZH}}</p>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+  <button class="btn btn-primary btn-block" type="button"
+          hx-post="/recall/{{.Notebook.ID}}/next"
+          hx-target="#recall-card" hx-swap="outerHTML">下一个</button>
+</article>
+{{end}}
