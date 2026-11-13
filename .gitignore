@@ -1,0 +1,15 @@
+# Build output
+/study-words
+/dist/
+node_modules/
+
+# Local data and downloaded sources
+/data/
+/data-src/
+
+# Test artifacts
+coverage.out
+*.test
+
+# Editor / OS noise
+.DS_Store
