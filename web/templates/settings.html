@@ -1,0 +1,53 @@
+{{define "content"}}
+<header class="page-head">
+  <h1 class="page-title">设置</h1>
+  <p class="page-subtitle">把生词和回忆记录备份下来，换设备时再导入。</p>
+</header>
+
+{{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+
+<section class="card settings-section">
+  <h2 class="settings-title">导出数据</h2>
+  <p class="muted-text">导出文件包含生词本、单词、例句、熟练度和回忆记录，是普通 JSON 文件。</p>
+  <div class="settings-actions">
+    <a class="btn btn-primary" href="/export" download>导出全部</a>
+  </div>
+  {{if .Notebooks}}
+  <ul class="export-list">
+    {{range .Notebooks}}
+    <li><a class="btn" href="/export?notebook={{.ID}}" download>导出「{{.Name}}」</a></li>
+    {{end}}
+  </ul>
+  {{end}}
+</section>
+
+<section class="card settings-section">
+  <h2 class="settings-title">导入数据</h2>
+  <form method="post" action="/import" enctype="multipart/form-data" class="form-stack">
+    {{template "csrf" .}}
+    <label class="field">
+      <span class="field-label">选择导出文件</span>
+      <input class="input" type="file" name="file" accept="application/json,.json" required>
+    </label>
+
+    <fieldset class="field">
+      <legend class="field-label">导入方式</legend>
+      <label class="choice">
+        <input type="radio" name="mode" value="merge" checked>
+        <span><strong>合并</strong>：保留现有数据，同名单词取熟练度较高的一方，只补全空的释义和例句。</span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="mode" value="overwrite">
+        <span><strong>覆盖</strong>：先删除现有生词本、单词和回忆记录，再完整导入。</span>
+      </label>
+    </fieldset>
+
+    <label class="choice">
+      <input type="checkbox" name="confirm" value="yes">
+      <span>我确认覆盖导入会清空现有数据</span>
+    </label>
+
+    <button class="btn btn-primary" type="submit" data-confirm="导入会修改现有数据，确定继续吗？">开始导入</button>
+  </form>
+</section>
+{{end}}

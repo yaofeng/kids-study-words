@@ -76,6 +76,34 @@
     @apply flex flex-col gap-4;
   }
 
+  .settings-section {
+    @apply mb-5 flex flex-col gap-3;
+  }
+
+  .settings-title {
+    @apply text-lg font-extrabold;
+  }
+
+  .settings-actions {
+    @apply flex flex-wrap gap-3;
+  }
+
+  .export-list {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .choice {
+    @apply flex items-start gap-2 font-semibold;
+  }
+
+  .choice input {
+    @apply mt-1 h-5 w-5 shrink-0 accent-teal;
+  }
+
+  .muted-text {
+    @apply text-muted;
+  }
+
   .form-error {
     @apply rounded-2xl border-2 border-coral-dark bg-coral/20 px-4 py-3 font-bold text-coral-dark;
   }

@@ -177,7 +177,17 @@ func (s *Server) csrfMiddleware(next http.Handler) http.Handler {
 		if sess := currentSession(r); sess != nil {
 			token := r.Header.Get("X-CSRF-Token")
 			if token == "" {
-				_ = r.ParseForm()
+				if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+					// A plain form cannot set headers; multipart bodies are not
+					// covered by ParseForm, so parse them here with a hard cap.
+					r.Body = http.MaxBytesReader(w, r.Body, maxImportBytes)
+					if err := r.ParseMultipartForm(maxImportBytes); err != nil {
+						http.Error(w, "上传内容太大或格式不对。", http.StatusRequestEntityTooLarge)
+						return
+					}
+				} else {
+					_ = r.ParseForm()
+				}
 				token = r.PostForm.Get("csrf_token")
 			}
 			if !auth.SecureEqual(token, sess.CSRFToken) {

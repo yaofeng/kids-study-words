@@ -139,6 +139,10 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 
 	mux.HandleFunc("GET /records", s.handleRecords)
 
+	mux.HandleFunc("GET /settings", s.handleSettingsPage)
+	mux.HandleFunc("GET /export", s.handleExport)
+	mux.HandleFunc("POST /import", s.handleImport)
+
 	static := http.StripPrefix("/static/", http.FileServerFS(staticFS))
 	mux.Handle("GET /static/", cacheControl(static, "max-age=3600"))
 
