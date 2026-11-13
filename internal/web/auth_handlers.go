@@ -21,8 +21,10 @@ func (s *Server) handleSetupPage(w http.ResponseWriter, r *http.Request) {
 		s.renderError(w, r, http.StatusNotFound, "页面不存在，检查一下网址吧。")
 		return
 	}
-	data := s.baseData(w, r)
-	data.Title = "首次设置"
+	data, ok := s.pageData(w, r, "首次设置", "")
+	if !ok {
+		return
+	}
 	_ = s.renderer.page(w, http.StatusOK, "setup", data)
 }
 
@@ -36,8 +38,10 @@ func (s *Server) handleSetupPost(w http.ResponseWriter, r *http.Request) {
 	confirm := r.PostForm.Get("confirm")
 
 	renderForm := func(msg string) {
-		data := s.baseData(w, r)
-		data.Title = "首次设置"
+		data, ok := s.pageData(w, r, "首次设置", "")
+		if !ok {
+			return
+		}
 		data.Username = username
 		data.Error = msg
 		_ = s.renderer.page(w, http.StatusOK, "setup", data)
@@ -91,16 +95,20 @@ func (s *Server) handleLoginPage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/lookup", http.StatusSeeOther)
 		return
 	}
-	data := s.baseData(w, r)
-	data.Title = "登录"
+	data, ok := s.pageData(w, r, "登录", "")
+	if !ok {
+		return
+	}
 	_ = s.renderer.page(w, http.StatusOK, "login", data)
 }
 
 func (s *Server) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 	ip := clientIP(r)
 	if !s.limiter.Allow(ip) {
-		data := s.baseData(w, r)
-		data.Title = "登录"
+		data, ok := s.pageData(w, r, "登录", "")
+		if !ok {
+			return
+		}
 		data.Error = "试了太多次，请稍后再试。"
 		_ = s.renderer.page(w, http.StatusTooManyRequests, "login", data)
 		return
@@ -114,8 +122,10 @@ func (s *Server) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 	password := r.PostForm.Get("password")
 
 	renderLoginError := func(msg string) {
-		data := s.baseData(w, r)
-		data.Title = "登录"
+		data, ok := s.pageData(w, r, "登录", "")
+		if !ok {
+			return
+		}
 		data.Username = username
 		data.Error = msg
 		_ = s.renderer.page(w, http.StatusOK, "login", data)

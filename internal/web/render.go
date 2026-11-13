@@ -17,14 +17,16 @@ import (
 // Base is embedded in every page's template data so the layout can render
 // navigation, CSRF tokens, and flash messages.
 type Base struct {
-	Title    string
-	Username string
-	User     store.User
-	CSRF     string
-	Active   string
-	Flash    string
-	Error    string
-	Version  string
+	Title           string
+	Username        string
+	User            store.User
+	CSRF            string
+	Active          string
+	Notebooks       []store.Notebook
+	DefaultNotebook *store.Notebook
+	Flash           string
+	Error           string
+	Version         string
 }
 
 // StarState is one of the five star positions.

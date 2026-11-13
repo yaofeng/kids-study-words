@@ -105,6 +105,12 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 	mux.HandleFunc("POST /login", s.handleLoginPost)
 	mux.HandleFunc("POST /logout", s.handleLogout)
 
+	mux.HandleFunc("GET /notebooks", s.handleNotebooksPage)
+	mux.HandleFunc("POST /notebooks", s.handleCreateNotebook)
+	mux.HandleFunc("POST /notebooks/{id}/rename", s.handleRenameNotebook)
+	mux.HandleFunc("POST /notebooks/{id}/default", s.handleSetDefaultNotebook)
+	mux.HandleFunc("POST /notebooks/{id}/delete", s.handleDeleteNotebook)
+
 	static := http.StripPrefix("/static/", http.FileServerFS(staticFS))
 	mux.Handle("GET /static/", cacheControl(static, "max-age=3600"))
 
@@ -137,12 +143,38 @@ func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
 	s.renderError(w, r, http.StatusNotFound, "页面不存在，检查一下网址吧。")
 }
 
+// pageData fills Base and reports failure through the error page.
+func (s *Server) pageData(w http.ResponseWriter, r *http.Request, title, active string) (Base, bool) {
+	data, err := s.baseData(w, r)
+	if err != nil {
+		s.fail(w, r, err)
+		return Base{}, false
+	}
+	data.Title = title
+	data.Active = active
+	return data, true
+}
+
 // baseData assembles the data every page template needs.
-func (s *Server) baseData(w http.ResponseWriter, r *http.Request) Base {
-	return Base{
+func (s *Server) baseData(w http.ResponseWriter, r *http.Request) (Base, error) {
+	data := Base{
 		User:    currentUser(r),
 		CSRF:    csrfFrom(r),
 		Flash:   popFlash(w, r),
 		Version: s.version,
 	}
+	if data.User.ID == 0 {
+		return data, nil
+	}
+	notebooks, err := s.store.ListNotebooks(r.Context(), data.User.ID)
+	if err != nil {
+		return Base{}, err
+	}
+	data.Notebooks = notebooks
+	for i := range notebooks {
+		if notebooks[i].IsDefault {
+			data.DefaultNotebook = &notebooks[i]
+		}
+	}
+	return data, nil
 }

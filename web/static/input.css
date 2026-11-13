@@ -108,6 +108,62 @@
     @apply font-bold text-teal-dark underline underline-offset-4;
   }
 
+  .page-head {
+    @apply mb-5 flex flex-col gap-1;
+  }
+
+  .page-title {
+    @apply text-2xl font-extrabold;
+  }
+
+  .page-subtitle {
+    @apply text-muted;
+  }
+
+  .create-row {
+    @apply mb-5 flex flex-col gap-3 sm:flex-row sm:items-end;
+  }
+
+  .notebook-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+  }
+
+  .notebook-card {
+    @apply flex flex-col gap-3;
+  }
+
+  .notebook-head {
+    @apply flex items-center justify-between gap-2;
+  }
+
+  .notebook-name {
+    @apply text-xl font-extrabold;
+  }
+
+  .notebook-meta {
+    @apply text-sm text-muted;
+  }
+
+  .notebook-actions {
+    @apply flex flex-wrap items-center gap-2 border-t-2 border-dashed border-ink/20 pt-3;
+  }
+
+  .rename-form {
+    @apply flex flex-1 items-center gap-2;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full border-2 border-ink px-3 py-0.5 text-xs font-bold;
+  }
+
+  .badge-default {
+    @apply bg-sun;
+  }
+
+  .empty-state {
+    @apply flex flex-col items-center gap-3 text-center text-muted;
+  }
+
   /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
   .app-nav {
     @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;

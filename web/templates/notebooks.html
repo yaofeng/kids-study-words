@@ -1,0 +1,56 @@
+{{define "content"}}
+<header class="page-head">
+  <h1 class="page-title">生词本</h1>
+  <p class="page-subtitle">给单词分分类，回忆时按本练习。</p>
+</header>
+
+{{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+
+<form method="post" action="/notebooks" class="card create-row">
+  {{template "csrf" .}}
+  <label class="field grow">
+    <span class="field-label">新建生词本</span>
+    <input class="input" type="text" name="name" maxlength="40" placeholder="比如：动物、学校、食物" required>
+  </label>
+  <button class="btn btn-primary" type="submit">新建</button>
+</form>
+
+{{if .Notebooks}}
+<ul class="notebook-grid">
+  {{range .Notebooks}}
+  <li class="card notebook-card">
+    <div class="notebook-head">
+      <h2 class="notebook-name">{{.Name}}</h2>
+      {{if .IsDefault}}<span class="badge badge-default">默认</span>{{end}}
+    </div>
+    <p class="notebook-meta">{{.WordCount}} 个单词 · 更新于 {{FormatDate .UpdatedAt}}</p>
+
+    <div class="notebook-actions">
+      <form method="post" action="/notebooks/{{.ID}}/rename" class="rename-form">
+        {{template "csrf" $}}
+        <input class="input" type="text" name="name" value="{{.Name}}" maxlength="40" aria-label="生词本名称">
+        <button class="btn" type="submit">重命名</button>
+      </form>
+
+      {{if not .IsDefault}}
+      <form method="post" action="/notebooks/{{.ID}}/default">
+        {{template "csrf" $}}
+        <button class="btn" type="submit">设为默认</button>
+      </form>
+      {{end}}
+
+      <form method="post" action="/notebooks/{{.ID}}/delete">
+        {{template "csrf" $}}
+        <button class="btn btn-danger" type="submit" data-confirm="删除「{{.Name}}」及其中所有单词和回忆记录？">删除</button>
+      </form>
+    </div>
+  </li>
+  {{end}}
+</ul>
+{{else}}
+<section class="card empty-state">
+  {{template "owl" .}}
+  <p>还没有生词本，先建一个吧。</p>
+</section>
+{{end}}
+{{end}}
