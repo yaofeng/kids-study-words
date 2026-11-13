@@ -530,7 +530,7 @@ volumes:
 - 项目名「少儿背单词」，公开仓库 `yaofeng/kids-study-words`，许可证 MIT，版权人 YaoFeng。
 - 发布物：`README.md`（中文为主，附简短英文介绍）、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`.env.example`、`docker-compose.yml`、截图。
 - README 覆盖：功能截图、用 Docker Hub 镜像快速开始、本地构建、环境变量表、AI 配置示例、Actions Secrets 配置、开发与测试、数据来源与许可、备份/迁移、已知限制。
-- 第三方许可：ECDICT（MIT）、Tatoeba 句对（CC-BY 2.0 FR）、htmx（MIT）、Tailwind CSS（MIT）、Nunito 字体（OFL-1.1）。在 `THIRD_PARTY_NOTICES.md` 和设置页「关于」中注明。
+- 第三方许可：ECDICT（MIT）、Tatoeba 句对（CC-BY 2.0 FR）、htmx（BSD-2-Clause）、Tailwind CSS（MIT）、Nunito 字体（OFL-1.1）。在 `THIRD_PARTY_NOTICES.md` 和设置页「关于」中注明。
 - 仓库元数据：描述「面向孩子的背单词 Web 应用 · Go + SQLite + Tailwind CSS」，topics 包括 `golang`、`sqlite`、`flashcards`、`vocabulary`、`kids`、`self-hosted`、`docker`、`tailwindcss`。
 - CI：GitHub Actions 在 push/PR 时运行 `go vet ./...`、`go test ./...`、`go build ./...`；不下载 66MB 词典，避免拖慢 CI。
 - 发布流程：本地初始化 git（`main` 分支），实现与测试通过后提交；用 `gh repo create kids-study-words --public --source=. --remote=origin --push` 创建并推送。之后按功能小步提交。

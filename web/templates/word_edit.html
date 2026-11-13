@@ -20,6 +20,7 @@
     <div class="example-list" data-max="5">
       {{range .Rows}}
       <div class="example-row">
+        <input type="hidden" name="example_source_{{.N}}" value="{{.Source}}">
         <input class="input" type="text" name="example_en_{{.N}}" value="{{.EN}}" placeholder="English sentence" aria-label="例句英文 {{.N}}">
         <input class="input" type="text" name="example_zh_{{.N}}" value="{{.ZH}}" placeholder="中文翻译" aria-label="例句中文 {{.N}}">
         <button class="btn btn-small" type="button" data-remove-example aria-label="删除这条例句">✕</button>

@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
 func TestRecallHidesMeaningUntilAnswer(t *testing.T) {
@@ -129,5 +131,25 @@ func TestRecallSelectPage(t *testing.T) {
 	body := tc.get("/recall").Body.String()
 	if !strings.Contains(body, "默认生词本") || !strings.Contains(body, "开始回忆") {
 		t.Fatalf("body=%s", body)
+	}
+}
+
+func TestRecallHidesPhoneticUntilAnswer(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	w, err := tc.store.AddWord(context.Background(), tc.notebook.ID, store.Word{
+		Word: "apple", Phonetic: "/ˈæpl/", Translation: "n. 苹果",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := tc.get("/recall/" + fmt.Sprint(tc.notebook.ID)).Body.String()
+	if strings.Contains(body, "/ˈæpl/") {
+		t.Fatal("phonetic must stay hidden before the child answers")
+	}
+	resp := tc.postForm(fmt.Sprintf("/recall/%d/answer", tc.notebook.ID), url.Values{
+		"word_id": {fmt.Sprint(w.ID)}, "known": {"1"}, "csrf_token": {tc.csrf},
+	})
+	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), "/ˈæpl/") {
+		t.Fatalf("phonetic should appear after the answer: code=%d body=%s", resp.Code, resp.Body.String())
 	}
 }

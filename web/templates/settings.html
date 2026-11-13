@@ -68,16 +68,16 @@
       </label>
       <label class="choice">
         <input type="radio" name="mode" value="overwrite">
-        <span><strong>覆盖</strong>：先删除现有生词本、单词和回忆记录，再完整导入。</span>
+        <span><strong>覆盖</strong>：先删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词和全部回忆记录，再完整导入。</span>
       </label>
     </fieldset>
 
     <label class="choice">
       <input type="checkbox" name="confirm" value="yes">
-      <span>我确认覆盖导入会清空现有数据</span>
+      <span>我确认覆盖导入会删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词和全部回忆记录</span>
     </label>
 
-    <button class="btn btn-primary" type="submit" data-confirm="导入会修改现有数据，确定继续吗？">开始导入</button>
+    <button class="btn btn-primary" type="submit" data-confirm="覆盖导入会删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词和全部回忆记录；合并导入只会补充数据。确定继续吗？">开始导入</button>
   </form>
 </section>
 

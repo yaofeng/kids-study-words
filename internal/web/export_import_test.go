@@ -92,7 +92,7 @@ func TestExportAllReturnsJSONAttachment(t *testing.T) {
 	if got := rec.Header().Get("Content-Type"); got != "application/json; charset=utf-8" {
 		t.Fatalf("content-type=%q", got)
 	}
-	want := "attachment; filename=\"study-words-" + time.Now().Format("20060102") + ".json\""
+	want := "attachment; filename=\"study-words-" + time.Now().UTC().Format("20060102") + ".json\""
 	if got := rec.Header().Get("Content-Disposition"); got != want {
 		t.Fatalf("content-disposition=%q want %q", got, want)
 	}
@@ -214,5 +214,15 @@ func TestImportRejectsFileOverLimit(t *testing.T) {
 	rec := tc.postImport(t, big, "merge", "")
 	if rec.Code != http.StatusRequestEntityTooLarge && rec.Code != http.StatusBadRequest {
 		t.Fatalf("code=%d", rec.Code)
+	}
+}
+
+func TestSettingsOverwriteConfirmShowsCounts(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
+	tc.seedWord(tc.notebook.ID, "banana", "n. 香蕉")
+	body := tc.get("/settings").Body.String()
+	if !strings.Contains(body, "1 个生词本") || !strings.Contains(body, "2 个单词") {
+		t.Fatalf("overwrite confirmation must say what will be deleted: %s", body)
 	}
 }

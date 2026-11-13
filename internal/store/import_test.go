@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 )
@@ -248,6 +249,10 @@ func TestValidateExportRejectsMalformed(t *testing.T) {
 		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a", Words: []ExportWord{{Word: "x", Proficiency: 0}}}}},
 		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a", Words: []ExportWord{{Word: "x", Proficiency: 5, Examples: make([]Example, 6)}}}}},
 		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a"}}, RecallLogs: []ExportLog{{Word: "x"}}},
+		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a"}}, RecallLogs: []ExportLog{{Word: "x", ProficiencyAfter: 0, ReviewedAt: time.Now()}}},
+		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a"}}, RecallLogs: []ExportLog{{Word: "x", ProficiencyAfter: 11, ReviewedAt: time.Now()}}},
+		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a"}}, RecallLogs: []ExportLog{{Word: "x", ProficiencyAfter: 5, ReviewCount: -1, ReviewedAt: time.Now()}}},
+		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a"}}, RecallLogs: []ExportLog{{Word: strings.Repeat("x", 101), ProficiencyAfter: 5, ReviewedAt: time.Now()}}},
 	}
 	for i, f := range cases {
 		if err := ValidateExport(f); err == nil {

@@ -76,8 +76,18 @@ func ValidateExport(f ExportFile) error {
 		}
 	}
 	for _, l := range f.RecallLogs {
-		if strings.TrimSpace(l.Word) == "" {
-			return errors.New("回忆记录缺少单词")
+		word := strings.TrimSpace(l.Word)
+		if n := utf8.RuneCountInString(word); n == 0 || n > 100 {
+			return fmt.Errorf("回忆记录的单词需为 1–100 个字符：%q", l.Word)
+		}
+		if utf8.RuneCountInString(strings.TrimSpace(l.Notebook)) > 100 {
+			return fmt.Errorf("回忆记录「%s」的生词本名称过长", l.Word)
+		}
+		if l.ProficiencyAfter < 1 || l.ProficiencyAfter > 10 {
+			return fmt.Errorf("回忆记录「%s」的熟练度 %d 不在 1–10 之间", l.Word, l.ProficiencyAfter)
+		}
+		if l.ReviewCount < 0 {
+			return fmt.Errorf("回忆记录「%s」的回忆次数不能为负", l.Word)
 		}
 		if l.ReviewedAt.IsZero() {
 			return fmt.Errorf("回忆记录「%s」缺少时间", l.Word)

@@ -12,10 +12,12 @@ const repoURL = "https://github.com/yaofeng/kids-study-words"
 // settingsView is the template data for the settings page.
 type settingsView struct {
 	Base
-	RepoURL   string
-	AIEnabled bool
-	AIModel   string
-	AIHost    string
+	RepoURL       string
+	NotebookCount int
+	WordCount     int
+	AIEnabled     bool
+	AIModel       string
+	AIHost        string
 }
 
 func (s *Server) settingsData(w http.ResponseWriter, r *http.Request) (settingsView, bool) {
@@ -24,6 +26,10 @@ func (s *Server) settingsData(w http.ResponseWriter, r *http.Request) (settingsV
 		return settingsView{}, false
 	}
 	view := settingsView{Base: base, RepoURL: repoURL}
+	for _, nb := range base.Notebooks {
+		view.NotebookCount++
+		view.WordCount += nb.WordCount
+	}
 	if s.ai != nil && s.ai.Enabled() {
 		view.AIEnabled = true
 		view.AIModel = s.ai.Model()

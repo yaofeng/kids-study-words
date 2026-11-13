@@ -20,7 +20,7 @@ document.addEventListener('htmx:responseError', (event) => {
 // Add or remove example sentence rows, keeping field names sequential.
 function renumberExamples(list) {
   Array.from(list.querySelectorAll('.example-row')).forEach((row, index) => {
-    row.querySelectorAll('input[name^="example_en_"], input[name^="example_zh_"]').forEach((input) => {
+    row.querySelectorAll('input[name^="example_en_"], input[name^="example_zh_"], input[name^="example_source_"]').forEach((input) => {
       input.name = input.name.replace(/_\d+$/, '_' + (index + 1));
     });
   });

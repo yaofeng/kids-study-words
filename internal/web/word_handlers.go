@@ -21,9 +21,10 @@ type notebookDetailData struct {
 
 // exampleRow is one editable sentence on the word edit page.
 type exampleRow struct {
-	N  int
-	EN string
-	ZH string
+	N      int
+	EN     string
+	ZH     string
+	Source string
 }
 
 // wordEditData feeds web/templates/word_edit.html.
@@ -197,6 +198,7 @@ func exampleRows(examples []store.Example, want int) []exampleRow {
 		if i < len(examples) {
 			rows[i].EN = examples[i].EN
 			rows[i].ZH = examples[i].ZH
+			rows[i].Source = examples[i].Source
 		}
 	}
 	return rows
@@ -211,7 +213,11 @@ func collectedRows(r *http.Request) []exampleRow {
 		if en == "" && zh == "" {
 			continue
 		}
-		rows = append(rows, exampleRow{N: n, EN: en, ZH: zh})
+		source := strings.TrimSpace(r.PostForm.Get("example_source_" + itoa(int64(n))))
+		if source == "" {
+			source = "manual"
+		}
+		rows = append(rows, exampleRow{N: n, EN: en, ZH: zh, Source: source})
 	}
 	if len(rows) == 0 {
 		rows = []exampleRow{{N: 1}}
@@ -230,7 +236,7 @@ func parseExampleRows(r *http.Request) ([]store.Example, string, []exampleRow) {
 		case row.EN == "" || row.ZH == "":
 			return nil, "例句的英文和中文要同时填写。", rows
 		}
-		examples = append(examples, store.Example{EN: row.EN, ZH: row.ZH, Source: "manual"})
+		examples = append(examples, store.Example{EN: row.EN, ZH: row.ZH, Source: row.Source})
 	}
 	return examples, "", rows
 }

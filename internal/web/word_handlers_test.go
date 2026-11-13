@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
 func TestNotebookDetailListsWords(t *testing.T) {
@@ -102,5 +104,48 @@ func TestWordEditShowsExistingExamples(t *testing.T) {
 	body := tc.get(fmt.Sprintf("/notebooks/%d/words/%d/edit", tc.notebook.ID, w.ID)).Body.String()
 	if !strings.Contains(body, "An apple a day.") {
 		t.Fatalf("example missing from edit page: %s", body)
+	}
+}
+
+func TestWordEditPreservesExampleSource(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	w, err := tc.store.AddWord(context.Background(), tc.notebook.ID, store.Word{
+		Word: "apple",
+		Examples: []store.Example{
+			{EN: "I ate an apple.", ZH: "我吃了一个苹果。", Source: "tatoeba"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	editURL := fmt.Sprintf("/notebooks/%d/words/%d/edit", tc.notebook.ID, w.ID)
+	body := tc.get(editURL).Body.String()
+	if !strings.Contains(body, `name="example_source_1"`) || !strings.Contains(body, `value="tatoeba"`) {
+		t.Fatalf("edit page must carry the existing source: %s", body)
+	}
+
+	resp := tc.postForm(editURL, url.Values{
+		"translation":      {"n. 苹果"},
+		"example_en_1":     {"I ate an apple."},
+		"example_zh_1":     {"我吃了一个苹果。"},
+		"example_source_1": {"tatoeba"},
+		"example_en_2":     {"An apple a day."},
+		"example_zh_2":     {"一天一个苹果。"},
+	})
+	if resp.Code != http.StatusSeeOther {
+		t.Fatalf("code=%d body=%s", resp.Code, resp.Body)
+	}
+	got, err := tc.store.WordByID(context.Background(), tc.notebook.ID, w.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Examples) != 2 {
+		t.Fatalf("examples=%+v", got.Examples)
+	}
+	if got.Examples[0].Source != "tatoeba" {
+		t.Fatalf("existing source lost: %+v", got.Examples[0])
+	}
+	if got.Examples[1].Source != "manual" {
+		t.Fatalf("new example should be manual: %+v", got.Examples[1])
 	}
 }
