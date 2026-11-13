@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/yaofeng/kids-study-words/internal/auth"
+	"github.com/yaofeng/kids-study-words/internal/recall"
 	"github.com/yaofeng/kids-study-words/internal/store"
 	assets "github.com/yaofeng/kids-study-words/web"
 )
@@ -33,6 +34,7 @@ type Server struct {
 	cookieSecure bool
 	now          func() time.Time
 	limiter      *auth.LoginLimiter
+	recall       *recall.Manager
 	renderer     *renderer
 	handler      http.Handler
 }
@@ -69,6 +71,7 @@ func New(opts Options) (*Server, error) {
 		cookieSecure: opts.CookieSecure,
 		now:          opts.Now,
 		limiter:      auth.NewLoginLimiter(5, time.Minute, opts.Now),
+		recall:       recall.NewManager(),
 	}
 	s.renderer = newRenderer(tmplFS, s.templateFuncs())
 
