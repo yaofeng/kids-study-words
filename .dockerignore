@@ -1,0 +1,16 @@
+.git
+.gitignore
+.github
+.superpowers
+docs
+
+# Local runtime data and build output; data-src stays available for offline builds
+data/
+study-words
+dist/
+coverage.out
+*.test
+
+# Editor / OS noise
+.DS_Store
+.env

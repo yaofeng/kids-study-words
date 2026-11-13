@@ -1,0 +1,30 @@
+services:
+  study-words:
+    image: study-words:local
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      PORT: "8080"
+      DATA_DIR: /data
+      DICT_PATH: /app/dict.db
+      TZ: ${TZ:-Asia/Shanghai}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+    volumes:
+      - study-words-data:/data
+    healthcheck:
+      test: ["CMD", "/app/study-words", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  study-words-data:
