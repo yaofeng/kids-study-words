@@ -1,0 +1,55 @@
+{{define "content"}}
+<header class="page-head">
+  <a class="back-link" href="/notebooks">← 所有生词本</a>
+  <div class="detail-head">
+    <div>
+      <h1 class="page-title">{{.Notebook.Name}}</h1>
+      <p class="page-subtitle">{{.Notebook.WordCount}} 个单词{{if .Notebook.IsDefault}} · 默认生词本{{end}}</p>
+    </div>
+    <div class="detail-actions">
+      <a class="btn" href="/lookup">去查词</a>
+      <a class="btn btn-primary" href="/recall/{{.Notebook.ID}}">开始回忆</a>
+    </div>
+  </div>
+</header>
+
+<div class="sort-tabs" role="tablist" aria-label="排序方式">
+  <a class="tab{{if eq .Sort "added"}} is-active{{end}}" href="?sort=added">加入时间</a>
+  <a class="tab{{if eq .Sort "proficiency"}} is-active{{end}}" href="?sort=proficiency">熟练度</a>
+  <a class="tab{{if eq .Sort "reviewed"}} is-active{{end}}" href="?sort=reviewed">最近回忆</a>
+</div>
+
+{{if .Words}}
+<ul class="word-list">
+  {{range .Words}}
+  <li class="card word-card">
+    <div class="word-main">
+      <div class="word-title">
+        <span class="word-en">{{.Word}}</span>
+        {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
+        {{template "stars" .Proficiency}}
+      </div>
+      <p class="word-translation">{{FirstLine .Translation}}</p>
+      <p class="word-meta">
+        加入于 {{FormatDate .AddedAt}}
+        {{if .LastReviewedAt}} · 上次回忆 {{FormatDate .LastReviewedAt}}{{else}} · 还没回忆过{{end}}
+        · 共回忆 {{.ReviewCount}} 次
+      </p>
+    </div>
+    <div class="word-actions">
+      <a class="btn btn-small" href="/notebooks/{{$.Notebook.ID}}/words/{{.ID}}/edit">编辑</a>
+      <form method="post" action="/notebooks/{{$.Notebook.ID}}/words/{{.ID}}/delete">
+        {{template "csrf" $}}
+        <button class="btn btn-small btn-danger" type="submit" data-confirm="删除单词「{{.Word}}」？">删除</button>
+      </form>
+    </div>
+  </li>
+  {{end}}
+</ul>
+{{else}}
+<section class="card empty-state">
+  {{template "owl" .}}
+  <p>这个生词本还是空的，去<a class="link" href="/lookup">查词</a>加入第一个单词吧。</p>
+</section>
+{{end}}
+{{end}}

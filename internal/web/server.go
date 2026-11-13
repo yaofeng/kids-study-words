@@ -91,6 +91,7 @@ func (s *Server) templateFuncs() template.FuncMap {
 		"FormatTime": s.FormatTime,
 		"FormatDate": s.FormatDate,
 		"Weekday":    s.Weekday,
+		"FirstLine":  firstLine,
 	}
 }
 
@@ -110,6 +111,10 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 	mux.HandleFunc("POST /notebooks/{id}/rename", s.handleRenameNotebook)
 	mux.HandleFunc("POST /notebooks/{id}/default", s.handleSetDefaultNotebook)
 	mux.HandleFunc("POST /notebooks/{id}/delete", s.handleDeleteNotebook)
+	mux.HandleFunc("GET /notebooks/{id}", s.handleNotebookDetail)
+	mux.HandleFunc("GET /notebooks/{id}/words/{wordID}/edit", s.handleWordEditPage)
+	mux.HandleFunc("POST /notebooks/{id}/words/{wordID}/edit", s.handleWordEditPost)
+	mux.HandleFunc("POST /notebooks/{id}/words/{wordID}/delete", s.handleWordDelete)
 
 	static := http.StripPrefix("/static/", http.FileServerFS(staticFS))
 	mux.Handle("GET /static/", cacheControl(static, "max-age=3600"))

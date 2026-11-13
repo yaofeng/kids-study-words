@@ -1,0 +1,44 @@
+{{define "content"}}
+<header class="page-head">
+  <a class="back-link" href="/notebooks/{{.Notebook.ID}}">← 返回 {{.Notebook.Name}}</a>
+  <h1 class="page-title">编辑「{{.Word.Word}}」</h1>
+  <p class="page-subtitle">只改释义和例句，熟练度与回忆记录保持不变。</p>
+</header>
+
+{{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+
+<form method="post" action="/notebooks/{{.Notebook.ID}}/words/{{.Word.ID}}/edit" class="card form-stack">
+  {{template "csrf" .}}
+
+  <label class="field">
+    <span class="field-label">中文释义（每行一个意思）</span>
+    <textarea class="input textarea" name="translation" rows="4" required>{{.Word.Translation}}</textarea>
+  </label>
+
+  <fieldset class="field">
+    <legend class="field-label">例句（英文和中文要成对填写，最多 5 条）</legend>
+    <div class="example-list" data-max="5">
+      {{range .Rows}}
+      <div class="example-row">
+        <input class="input" type="text" name="example_en_{{.N}}" value="{{.EN}}" placeholder="English sentence" aria-label="例句英文 {{.N}}">
+        <input class="input" type="text" name="example_zh_{{.N}}" value="{{.ZH}}" placeholder="中文翻译" aria-label="例句中文 {{.N}}">
+        <button class="btn btn-small" type="button" data-remove-example aria-label="删除这条例句">✕</button>
+      </div>
+      {{end}}
+    </div>
+    <template id="example-row-template">
+      <div class="example-row">
+        <input class="input" type="text" name="example_en_0" placeholder="English sentence" aria-label="例句英文">
+        <input class="input" type="text" name="example_zh_0" placeholder="中文翻译" aria-label="例句中文">
+        <button class="btn btn-small" type="button" data-remove-example aria-label="删除这条例句">✕</button>
+      </div>
+    </template>
+    <button class="btn btn-small self-start" type="button" data-add-example>再加一句</button>
+  </fieldset>
+
+  <div class="detail-actions">
+    <button class="btn btn-primary" type="submit">保存</button>
+    <a class="btn" href="/notebooks/{{.Notebook.ID}}">取消</a>
+  </div>
+</form>
+{{end}}

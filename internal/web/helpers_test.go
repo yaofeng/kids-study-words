@@ -134,3 +134,13 @@ func FormValues(kv ...string) url.Values {
 
 // hashCookie returns the storage hash for a session cookie value.
 func hashCookie(raw string) string { return auth.HashToken(raw) }
+
+// seedWord inserts a word directly into the store for page tests.
+func (tc *testClient) seedWord(notebookID int64, word, translation string) store.Word {
+	tc.t.Helper()
+	w, err := tc.store.AddWord(context.Background(), notebookID, store.Word{Word: word, Translation: translation})
+	if err != nil {
+		tc.t.Fatal(err)
+	}
+	return w
+}

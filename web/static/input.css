@@ -164,6 +164,82 @@
     @apply flex flex-col items-center gap-3 text-center text-muted;
   }
 
+  .back-link {
+    @apply text-sm font-bold text-muted hover:text-teal-dark;
+  }
+
+  .detail-head {
+    @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .detail-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .btn-small {
+    @apply min-h-[38px] px-3 py-1 text-sm;
+  }
+
+  .sort-tabs {
+    @apply mb-4 flex gap-2;
+  }
+
+  .tab {
+    @apply rounded-full border-2 border-ink bg-paper px-4 py-1.5 text-sm font-bold text-muted shadow-sticker;
+  }
+
+  .tab.is-active {
+    @apply bg-teal text-white;
+  }
+
+  .word-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .word-card {
+    @apply flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .word-main {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+
+  .word-title {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .word-en {
+    @apply text-xl font-extrabold;
+  }
+
+  .word-phonetic {
+    @apply text-sm text-muted;
+  }
+
+  .word-translation {
+    @apply text-base;
+  }
+
+  .word-meta {
+    @apply text-xs text-muted;
+  }
+
+  .word-actions {
+    @apply flex shrink-0 items-center gap-2;
+  }
+
+  .textarea {
+    @apply min-h-[96px] resize-y;
+  }
+
+  .example-list {
+    @apply flex flex-col gap-2;
+  }
+
+  .example-row {
+    @apply flex flex-col gap-2 sm:flex-row sm:items-center;
+  }
+
   /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
   .app-nav {
     @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;

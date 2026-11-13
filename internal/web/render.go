@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -189,4 +190,14 @@ func popFlash(w http.ResponseWriter, r *http.Request) string {
 		return c.Value
 	}
 	return msg
+}
+
+// firstLine returns the first non-empty line of a multi-line translation.
+func firstLine(s string) string {
+	for _, line := range strings.Split(s, "\n") {
+		if line = strings.TrimSpace(line); line != "" {
+			return line
+		}
+	}
+	return ""
 }
