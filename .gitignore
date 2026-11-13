@@ -13,3 +13,6 @@ coverage.out
 
 # Editor / OS noise
 .DS_Store
+
+# Local environment
+.env
