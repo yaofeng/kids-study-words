@@ -149,3 +149,46 @@
           hx-target="#recall-card" hx-swap="outerHTML">下一个</button>
 </article>
 {{end}}
+
+{{define "records_days"}}
+{{if .Groups}}
+{{range .Groups}}
+<section class="records-day">
+  <h2 class="records-day-head">
+    <span>{{.Label}}</span>
+    <span class="muted-text">认识 {{.Known}} · 不认识 {{.Unknown}}</span>
+  </h2>
+  <ul class="record-list">
+    {{range .Logs}}
+    <li class="record-row">
+      <span class="record-time">{{FormatTime .ReviewedAt}}</span>
+      <span class="record-word">{{.Word}}</span>
+      <span class="record-count">第 {{.ReviewCount}} 次</span>
+      <span class="badge{{if .Known}} is-known{{else}} is-unknown{{end}}">{{if .Known}}认识{{else}}不认识{{end}}</span>
+      {{template "stars" .ProficiencyAfter}}
+    </li>
+    {{end}}
+  </ul>
+</section>
+{{end}}
+{{else}}
+<p class="card empty-state">还没有回忆记录，去<a class="link" href="/recall">回忆单词</a>开始吧。</p>
+{{end}}
+{{end}}
+
+{{define "records_more_body"}}
+{{if .HasMore}}
+<button class="btn" type="button"
+        hx-get="/records?notebook={{.Filter}}&before={{.NextBefore}}"
+        hx-target="#records-list" hx-swap="beforeend">加载更早</button>
+{{end}}
+{{end}}
+
+{{define "records_more"}}
+<div id="load-more" class="load-more">{{template "records_more_body" .}}</div>
+{{end}}
+
+{{define "records_fragment"}}
+{{template "records_days" .}}
+<div id="load-more" hx-swap-oob="outerHTML:#load-more" class="load-more">{{template "records_more_body" .}}</div>
+{{end}}

@@ -50,3 +50,9 @@ document.addEventListener('click', (event) => {
     renumberExamples(list);
   }
 });
+
+// Submit filter forms when their select changes, without inline handlers.
+document.addEventListener('change', (event) => {
+  const el = event.target.closest('[data-auto-submit]');
+  if (el && el.form) el.form.requestSubmit();
+});

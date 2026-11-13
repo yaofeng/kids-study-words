@@ -1,0 +1,23 @@
+{{define "content"}}
+<header class="page-head">
+  <h1 class="page-title">回忆记录</h1>
+  <p class="page-subtitle">按天看看认识了多少、卡住了哪些。</p>
+</header>
+
+<form class="card filter-row" method="get" action="/records">
+  <label class="field">
+    <span class="field-label">生词本</span>
+    <select class="input select" name="notebook" data-auto-submit>
+      <option value=""{{if not .Filter}} selected{{end}}>全部</option>
+      {{$filter := .Filter}}
+      {{range .Notebooks}}
+      <option value="{{.ID}}"{{if eq (printf "%d" .ID) $filter}} selected{{end}}>{{.Name}}</option>
+      {{end}}
+    </select>
+  </label>
+  <noscript><button class="btn" type="submit">筛选</button></noscript>
+</form>
+
+<div id="records-list">{{template "records_days" .}}</div>
+{{template "records_more" .}}
+{{end}}

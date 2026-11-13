@@ -422,6 +422,50 @@
     @apply justify-center;
   }
 
+  .filter-row {
+    @apply mb-5 flex flex-col gap-3 sm:flex-row sm:items-end;
+  }
+
+  .records-day {
+    @apply mb-5;
+  }
+
+  .records-day-head {
+    @apply mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-ink/15 pb-1 text-lg font-extrabold;
+  }
+
+  .record-list {
+    @apply flex flex-col gap-2;
+  }
+
+  .record-row {
+    @apply flex flex-wrap items-center gap-2 rounded-2xl border-2 border-ink bg-paper px-4 py-2;
+  }
+
+  .record-time {
+    @apply w-12 shrink-0 font-bold text-muted;
+  }
+
+  .record-word {
+    @apply font-extrabold;
+  }
+
+  .record-count {
+    @apply text-sm text-muted;
+  }
+
+  .badge.is-known {
+    @apply bg-teal/25 text-teal-dark;
+  }
+
+  .badge.is-unknown {
+    @apply bg-coral/25 text-coral-dark;
+  }
+
+  .load-more {
+    @apply mt-4 flex justify-center;
+  }
+
   /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
   .app-nav {
     @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;
