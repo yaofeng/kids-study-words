@@ -9,24 +9,9 @@ import (
 	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
-func (s *Server) handleSettingsPage(w http.ResponseWriter, r *http.Request) {
-	data, ok := s.pageData(w, r, "设置", "settings")
-	if !ok {
-		return
-	}
-	if err := s.renderer.page(w, http.StatusOK, "settings", data); err != nil {
-		s.fail(w, r, err)
-	}
-}
-
 // renderSettingsError re-renders the settings page with a message.
 func (s *Server) renderSettingsError(w http.ResponseWriter, r *http.Request, status int, msg string) {
-	data, ok := s.pageData(w, r, "设置", "settings")
-	if !ok {
-		return
-	}
-	data.Error = msg
-	_ = s.renderer.page(w, status, "settings", data)
+	s.renderSettingsData(w, r, status, msg)
 }
 
 func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {

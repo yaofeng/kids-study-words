@@ -140,6 +140,7 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 	mux.HandleFunc("GET /records", s.handleRecords)
 
 	mux.HandleFunc("GET /settings", s.handleSettingsPage)
+	mux.HandleFunc("POST /settings/password", s.handleChangePassword)
 	mux.HandleFunc("GET /export", s.handleExport)
 	mux.HandleFunc("POST /import", s.handleImport)
 

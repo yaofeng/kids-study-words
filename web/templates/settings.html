@@ -7,6 +7,36 @@
 {{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
 
 <section class="card settings-section">
+  <h2 class="settings-title">账户</h2>
+  <p class="muted-text">当前用户：<strong>{{.User.Username}}</strong></p>
+
+  <details class="settings-details">
+    <summary class="settings-summary">修改密码</summary>
+    <form method="post" action="/settings/password" class="form-stack settings-form">
+      {{template "csrf" .}}
+      <label class="field">
+        <span class="field-label">当前密码</span>
+        <input class="input" type="password" name="current" autocomplete="current-password" required>
+      </label>
+      <label class="field">
+        <span class="field-label">新密码（6–72 个字符）</span>
+        <input class="input" type="password" name="new" autocomplete="new-password" minlength="6" maxlength="72" required>
+      </label>
+      <label class="field">
+        <span class="field-label">再输一次新密码</span>
+        <input class="input" type="password" name="confirm" autocomplete="new-password" minlength="6" maxlength="72" required>
+      </label>
+      <button class="btn btn-primary" type="submit">更新密码</button>
+    </form>
+  </details>
+
+  <form method="post" action="/logout">
+    {{template "csrf" .}}
+    <button class="btn" type="submit">退出登录</button>
+  </form>
+</section>
+
+<section class="card settings-section">
   <h2 class="settings-title">导出数据</h2>
   <p class="muted-text">导出文件包含生词本、单词、例句、熟练度和回忆记录，是普通 JSON 文件。</p>
   <div class="settings-actions">
@@ -49,5 +79,12 @@
 
     <button class="btn btn-primary" type="submit" data-confirm="导入会修改现有数据，确定继续吗？">开始导入</button>
   </form>
+</section>
+
+<section class="card settings-section">
+  <h2 class="settings-title">关于</h2>
+  <p class="muted-text">少儿背单词 · 版本 {{.Version}}</p>
+  <p class="muted-text">开源项目，源码在 <a class="link" href="{{.RepoURL}}" rel="noopener">GitHub</a>，使用 MIT 许可证。</p>
+  <p class="muted-text">数据来源：ECDICT 词典、Tatoeba 例句；界面使用 htmx、Tailwind CSS 和 Nunito 字体。</p>
 </section>
 {{end}}
