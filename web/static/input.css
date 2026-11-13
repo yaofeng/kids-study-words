@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/nunito-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/nunito-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/nunito-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/static/fonts/nunito-800.woff2') format('woff2');
+}
+
+@layer base {
+  body {
+    background-image: radial-gradient(circle at 12% 8%, rgba(255, 217, 102, 0.18) 0 12px, transparent 13px),
+      radial-gradient(circle at 88% 22%, rgba(185, 167, 230, 0.16) 0 16px, transparent 17px);
+    background-repeat: no-repeat;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-blob border-2 border-ink bg-paper p-5 shadow-sticker;
+  }
+
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border-2 border-ink bg-paper px-5 py-2 font-bold text-ink shadow-sticker transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+  }
+
+  .btn-primary {
+    @apply bg-teal text-white;
+  }
+
+  .btn-danger {
+    @apply bg-coral text-ink;
+  }
+
+  .btn-block {
+    @apply w-full;
+  }
+
+  .input {
+    @apply min-h-[44px] w-full rounded-2xl border-2 border-ink bg-paper px-4 py-2 text-base outline-none focus:border-teal-dark focus:ring-2 focus:ring-teal/40;
+  }
+
+  .field {
+    @apply flex flex-col gap-1;
+  }
+
+  .field-label {
+    @apply text-sm font-bold text-muted;
+  }
+
+  .form-stack {
+    @apply flex flex-col gap-4;
+  }
+
+  .form-error {
+    @apply rounded-2xl border-2 border-coral-dark bg-coral/20 px-4 py-3 font-bold text-coral-dark;
+  }
+
+  .flash {
+    @apply mb-4 rounded-2xl border-2 border-teal-dark bg-teal/15 px-4 py-3 font-bold text-teal-dark;
+  }
+
+  .auth-card {
+    @apply card mx-auto mt-8 flex max-w-md flex-col gap-4;
+  }
+
+  .auth-hero {
+    @apply text-center;
+  }
+
+  .owl {
+    @apply mx-auto h-28 w-28;
+  }
+
+  .auth-title {
+    @apply text-center text-2xl font-extrabold;
+  }
+
+  .auth-subtitle {
+    @apply text-center text-muted;
+  }
+
+  .link {
+    @apply font-bold text-teal-dark underline underline-offset-4;
+  }
+
+  /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
+  .app-nav {
+    @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;
+  }
+
+  .nav-link {
+    @apply flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 text-sm font-bold text-muted md:min-h-[48px] md:flex-row md:justify-start md:gap-3 md:rounded-2xl md:px-4;
+  }
+
+  .nav-link.is-active {
+    @apply text-teal-dark md:border-2 md:border-ink md:bg-teal/15 md:shadow-sticker;
+  }
+
+  .nav-icon {
+    @apply text-xl leading-none;
+  }
+
+  /* Stars: full / half / empty using text glyphs. */
+  .stars {
+    @apply inline-flex items-center gap-0.5 align-middle;
+  }
+
+  .star {
+    @apply text-lg leading-none;
+  }
+
+  .star-full::before {
+    content: '★';
+    color: #ffd966;
+    -webkit-text-stroke: 1px #3b3a36;
+  }
+
+  .star-empty::before {
+    content: '☆';
+    color: #e3dccd;
+    -webkit-text-stroke: 1px #3b3a36;
+  }
+
+  .star-half::before {
+    content: '★';
+    background: linear-gradient(90deg, #ffd966 50%, #e3dccd 50%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 1px #3b3a36;
+  }
+}

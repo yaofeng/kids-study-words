@@ -1,0 +1,148 @@
+package web
+
+import (
+	"errors"
+	"fmt"
+	"html/template"
+	"io/fs"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/yaofeng/kids-study-words/internal/auth"
+	"github.com/yaofeng/kids-study-words/internal/store"
+	assets "github.com/yaofeng/kids-study-words/web"
+)
+
+// Options configures a Server.
+type Options struct {
+	Store        *store.Store
+	Location     *time.Location
+	Version      string
+	CookieSecure bool
+	Now          func() time.Time
+}
+
+// Server owns routing, rendering, and authentication state.
+type Server struct {
+	store        *store.Store
+	loc          *time.Location
+	version      string
+	cookieSecure bool
+	now          func() time.Time
+	limiter      *auth.LoginLimiter
+	renderer     *renderer
+	handler      http.Handler
+}
+
+// New builds a Server and its middleware chain.
+func New(opts Options) (*Server, error) {
+	if opts.Store == nil {
+		return nil, errors.New("web: Options.Store is required")
+	}
+	if opts.Now == nil {
+		opts.Now = time.Now
+	}
+	if opts.Location == nil {
+		opts.Location = time.Local
+	}
+	if opts.Version == "" {
+		opts.Version = "dev"
+	}
+
+	staticFS, err := fs.Sub(assets.Static, "static")
+	if err != nil {
+		return nil, fmt.Errorf("static assets: %w", err)
+	}
+	tmplFS, err := fs.Sub(assets.Templates, "templates")
+	if err != nil {
+		return nil, fmt.Errorf("templates: %w", err)
+	}
+
+	s := &Server{
+		store:        opts.Store,
+		loc:          opts.Location,
+		version:      opts.Version,
+		cookieSecure: opts.CookieSecure,
+		now:          opts.Now,
+		limiter:      auth.NewLoginLimiter(5, time.Minute, opts.Now),
+	}
+	s.renderer = newRenderer(tmplFS, s.templateFuncs())
+
+	mux := s.routes(staticFS)
+	var h http.Handler = mux
+	h = s.csrfMiddleware(h)
+	h = s.sessionMiddleware(h)
+	h = s.setupGateMiddleware(h)
+	h = loggingMiddleware(h)
+	h = securityHeaders(h)
+	h = recoverMiddleware(h)
+	s.handler = h
+	return s, nil
+}
+
+// Handler returns the fully wrapped HTTP handler.
+func (s *Server) Handler() http.Handler { return s.handler }
+
+func (s *Server) templateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"Stars":      Stars,
+		"StarLabel":  StarLabel,
+		"FormatTime": s.FormatTime,
+		"FormatDate": s.FormatDate,
+		"Weekday":    s.Weekday,
+	}
+}
+
+func (s *Server) routes(staticFS fs.FS) http.Handler {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /{$}", s.handleRoot)
+	mux.HandleFunc("GET /healthz", s.handleHealth)
+	mux.HandleFunc("GET /setup", s.handleSetupPage)
+	mux.HandleFunc("POST /setup", s.handleSetupPost)
+	mux.HandleFunc("GET /login", s.handleLoginPage)
+	mux.HandleFunc("POST /login", s.handleLoginPost)
+	mux.HandleFunc("POST /logout", s.handleLogout)
+
+	static := http.StripPrefix("/static/", http.FileServerFS(staticFS))
+	mux.Handle("GET /static/", cacheControl(static, "max-age=3600"))
+
+	mux.HandleFunc("GET /", s.handleNotFound)
+	return mux
+}
+
+// cacheControl adds a Cache-Control header to successful static responses.
+func cacheControl(next http.Handler, value string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", value)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/lookup", http.StatusSeeOther)
+}
+
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if err := s.store.Ping(r.Context()); err != nil {
+		slog.Error("health check failed", "err", err)
+		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	HealthHandler(w, r)
+}
+
+func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
+	s.renderError(w, r, http.StatusNotFound, "页面不存在，检查一下网址吧。")
+}
+
+// baseData assembles the data every page template needs.
+func (s *Server) baseData(w http.ResponseWriter, r *http.Request) Base {
+	return Base{
+		User:    currentUser(r),
+		CSRF:    csrfFrom(r),
+		Flash:   popFlash(w, r),
+		Version: s.version,
+	}
+}

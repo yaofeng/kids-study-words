@@ -1,0 +1,18 @@
+{{define "layout"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} · 少儿背单词</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body class="min-h-screen bg-cream font-rounded text-ink" hx-headers='{"X-CSRF-Token":"{{.CSRF}}"}'>
+  {{if .User.ID}}{{template "nav" .}}{{end}}
+  <main class="mx-auto w-full max-w-3xl px-4 pb-28 pt-6 md:pb-10 md:pl-72">
+    {{if .Flash}}<div class="flash" role="status">{{.Flash}}</div>{{end}}
+    {{template "content" .}}
+  </main>
+</body>
+</html>{{end}}

@@ -138,12 +138,26 @@ func serve() error {
 		return err
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", web.HealthHandler)
+	dbPath := filepath.Join(cfg.DataDir, "study.db")
+	st, err := store.Open(context.Background(), dbPath)
+	if err != nil {
+		return fmt.Errorf("打开数据库 %s 失败（检查数据目录是否可写）: %w", dbPath, err)
+	}
+	defer st.Close()
+
+	app, err := web.New(web.Options{
+		Store:        st,
+		Location:     cfg.Location,
+		Version:      version,
+		CookieSecure: cfg.CookieSecure,
+	})
+	if err != nil {
+		return err
+	}
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           mux,
+		Handler:           app.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 

@@ -1,0 +1,35 @@
+{{define "csrf"}}<input type="hidden" name="csrf_token" value="{{.CSRF}}">{{end}}
+
+{{define "nav"}}
+<nav class="app-nav" aria-label="主导航">
+  <a href="/lookup" class="nav-link{{if eq .Active "lookup"}} is-active{{end}}">
+    <span class="nav-icon" aria-hidden="true">🔎</span><span class="nav-label">查词</span>
+  </a>
+  <a href="/notebooks" class="nav-link{{if eq .Active "notebooks"}} is-active{{end}}">
+    <span class="nav-icon" aria-hidden="true">📒</span><span class="nav-label">生词本</span>
+  </a>
+  <a href="/recall" class="nav-link{{if eq .Active "recall"}} is-active{{end}}">
+    <span class="nav-icon" aria-hidden="true">🃏</span><span class="nav-label">回忆</span>
+  </a>
+  <a href="/records" class="nav-link{{if eq .Active "records"}} is-active{{end}}">
+    <span class="nav-icon" aria-hidden="true">📅</span><span class="nav-label">记录</span>
+  </a>
+  <a href="/settings" class="nav-link{{if eq .Active "settings"}} is-active{{end}}">
+    <span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-label">设置</span>
+  </a>
+</nav>
+{{end}}
+
+{{define "stars"}}<span class="stars" role="img" aria-label="{{StarLabel .}}">{{range Stars .}}<span class="star star-{{.Fill}}" aria-hidden="true"></span>{{end}}</span>{{end}}
+
+{{define "owl"}}<svg class="owl" viewBox="0 0 120 120" role="img" aria-label="小猫头鹰" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="60" cy="66" rx="38" ry="40" fill="#FFD966" stroke="#3B3A36" stroke-width="4"/>
+  <path d="M26 34 L38 46 L22 50 Z" fill="#FF9F80" stroke="#3B3A36" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M94 34 L82 46 L98 50 Z" fill="#FF9F80" stroke="#3B3A36" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="46" cy="58" r="12" fill="#FFFFFF" stroke="#3B3A36" stroke-width="4"/>
+  <circle cx="74" cy="58" r="12" fill="#FFFFFF" stroke="#3B3A36" stroke-width="4"/>
+  <circle cx="46" cy="58" r="5" fill="#3B3A36"/>
+  <circle cx="74" cy="58" r="5" fill="#3B3A36"/>
+  <path d="M60 66 L54 74 L66 74 Z" fill="#FF9F80" stroke="#3B3A36" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M42 90 Q60 100 78 90" stroke="#3B3A36" stroke-width="4" stroke-linecap="round"/>
+</svg>{{end}}

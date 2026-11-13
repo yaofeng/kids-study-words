@@ -1,0 +1,24 @@
+{{define "content"}}
+<section class="auth-card">
+  <div class="auth-hero">{{template "owl" .}}</div>
+  <h1 class="auth-title">欢迎来到少儿背单词</h1>
+  <p class="auth-subtitle">先创建一个账号，之后用它登录。</p>
+  {{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+  <form method="post" action="/setup" class="form-stack">
+    {{template "csrf" .}}
+    <label class="field">
+      <span class="field-label">用户名</span>
+      <input class="input" type="text" name="username" value="{{.Username}}" maxlength="32" autocomplete="username" required autofocus>
+    </label>
+    <label class="field">
+      <span class="field-label">密码（至少 6 位）</span>
+      <input class="input" type="password" name="password" autocomplete="new-password" required>
+    </label>
+    <label class="field">
+      <span class="field-label">再输一次密码</span>
+      <input class="input" type="password" name="confirm" autocomplete="new-password" required>
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">开始使用</button>
+  </form>
+</section>
+{{end}}

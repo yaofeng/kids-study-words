@@ -1,0 +1,20 @@
+{{define "content"}}
+<section class="auth-card">
+  <div class="auth-hero">{{template "owl" .}}</div>
+  <h1 class="auth-title">少儿背单词</h1>
+  <p class="auth-subtitle">每天几分钟，把新词变成老朋友。</p>
+  {{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+  <form method="post" action="/login" class="form-stack">
+    {{template "csrf" .}}
+    <label class="field">
+      <span class="field-label">用户名</span>
+      <input class="input" type="text" name="username" value="{{.Username}}" autocomplete="username" required autofocus>
+    </label>
+    <label class="field">
+      <span class="field-label">密码</span>
+      <input class="input" type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">登录</button>
+  </form>
+</section>
+{{end}}
