@@ -1,0 +1,32 @@
+{{define "content"}}
+<header class="page-head">
+  <h1 class="page-title">查词</h1>
+  <p class="page-subtitle">英译中看例句，中译英找说法。</p>
+</header>
+
+<nav class="lookup-tabs" aria-label="查词方向">
+  <a class="tab{{if eq .Mode "en"}} is-active{{end}}" href="/lookup?mode=en{{if .Query}}&amp;q={{.Query}}{{end}}">英 → 中</a>
+  <a class="tab{{if eq .Mode "zh"}} is-active{{end}}" href="/lookup?mode=zh{{if .Query}}&amp;q={{.Query}}{{end}}">中 → 英</a>
+</nav>
+
+<form class="card lookup-form" method="get" action="/lookup" role="search">
+  <input type="hidden" name="mode" value="{{.Mode}}">
+  <label class="field grow">
+    <span class="field-label">{{if eq .Mode "zh"}}输入中文{{else}}输入英文{{end}}</span>
+    <input class="input lookup-input" type="search" name="q" value="{{.Query}}"
+           placeholder="{{if eq .Mode "zh"}}比如：苹果{{else}}比如：apple{{end}}"
+           autocomplete="off" autocapitalize="none" spellcheck="false" autofocus
+           hx-get="/lookup/results"
+           hx-trigger="input changed delay:250ms, search"
+           hx-target="#results"
+           hx-include="[name='mode']"
+           hx-indicator="#lookup-indicator">
+  </label>
+  <button class="btn btn-primary" type="submit">查一查</button>
+  <p id="lookup-indicator" class="htmx-indicator muted-text">正在查…</p>
+</form>
+
+<div id="results">
+  {{template "lookup_results" .}}
+</div>
+{{end}}

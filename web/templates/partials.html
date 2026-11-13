@@ -33,3 +33,67 @@
   <path d="M60 66 L54 74 L66 74 Z" fill="#FF9F80" stroke="#3B3A36" stroke-width="3" stroke-linejoin="round"/>
   <path d="M42 90 Q60 100 78 90" stroke="#3B3A36" stroke-width="4" stroke-linecap="round"/>
 </svg>{{end}}
+
+{{define "lookup_results"}}
+{{if .Results}}
+<ul class="lookup-results">
+  {{range .Results}}
+  <li class="card lookup-card">
+    <div class="lookup-main">
+      <h2 class="lookup-word">
+        <span class="word-en">{{.Word}}</span>
+        {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
+      </h2>
+      {{if .Translation}}
+      <ul class="translation-lines">
+        {{range Lines .Translation}}<li>{{.}}</li>{{end}}
+      </ul>
+      {{end}}
+      {{if .Definition}}<p class="definition">{{.Definition}}</p>{{end}}
+      {{if Tags .Tag}}
+      <p class="tags">{{range Tags .Tag}}<span class="badge">{{.}}</span>{{end}}</p>
+      {{end}}
+    </div>
+    <div class="lookup-actions">
+      <form method="post" action="/words" class="add-form">
+        {{template "csrf" $}}
+        <input type="hidden" name="word" value="{{.Word}}">
+        <input type="hidden" name="next" value="/lookup?mode={{$.Mode}}&q={{$.Query}}">
+        <select class="input select" name="notebook_id" aria-label="加入哪个生词本">
+          {{range $.Notebooks}}
+          <option value="{{.ID}}"{{if and $.DefaultNotebook (eq .ID $.DefaultNotebook.ID)}} selected{{end}}>{{.Name}}</option>
+          {{end}}
+        </select>
+        <button class="btn btn-primary btn-small" type="submit">加入生词本</button>
+      </form>
+      <button class="btn btn-small" type="button"
+              hx-get="/lookup/examples?word={{.Word}}"
+              hx-target="#examples-{{.Word}}"
+              hx-swap="innerHTML"
+              hx-indicator="#examples-{{.Word}}">看例句</button>
+      <div id="examples-{{.Word}}" class="examples-slot"></div>
+    </div>
+  </li>
+  {{end}}
+</ul>
+{{else if .Query}}
+<p class="card empty-state">没有找到和「{{.Query}}」相关的词，换个写法试试？</p>
+{{else}}
+<p class="card empty-state">输入一个单词或中文，马上开始查。</p>
+{{end}}
+{{end}}
+
+{{define "examples"}}
+{{if .Sentences}}
+<ul class="examples">
+  {{range .Sentences}}
+  <li class="example">
+    <p class="example-en">{{.EN}}</p>
+    <p class="example-zh">{{.ZH}}</p>
+  </li>
+  {{end}}
+</ul>
+{{else}}
+<p class="muted-text">{{.Message}}</p>
+{{end}}
+{{end}}

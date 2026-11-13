@@ -135,3 +135,12 @@ func (s *Server) pathID(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	}
 	return id, true
 }
+
+// parseID parses a positive int64 form value.
+func parseID(raw string) (int64, bool) {
+	id, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+	if err != nil || id <= 0 {
+		return 0, false
+	}
+	return id, true
+}

@@ -92,10 +92,14 @@ func newRenderer(fsys fs.FS, funcs template.FuncMap) *renderer {
 	return &renderer{fsys: fsys, funcs: funcs, cache: make(map[string]*template.Template)}
 }
 
-// load parses layout.html (when withLayout) plus partials and the named file.
+// load parses layout.html (when withLayout) plus partials and, when it
+// exists, the named file. Fragments may live entirely in partials.html.
 func (r *renderer) load(name string, withLayout bool) (*template.Template, error) {
 	key := name
-	files := []string{"partials.html", name + ".html"}
+	files := []string{"partials.html"}
+	if _, err := fs.Stat(r.fsys, name+".html"); err == nil {
+		files = append(files, name+".html")
+	}
 	if withLayout {
 		key = "page:" + name
 		files = append([]string{"layout.html"}, files...)
@@ -200,4 +204,33 @@ func firstLine(s string) string {
 		}
 	}
 	return ""
+}
+
+// Lines splits a multi-line translation into trimmed non-empty lines.
+func Lines(s string) []string {
+	var out []string
+	for _, line := range strings.Split(s, "\n") {
+		if line = strings.TrimSpace(line); line != "" {
+			out = append(out, line)
+		}
+	}
+	return out
+}
+
+var tagLabels = map[string]string{
+	"zk":   "中考",
+	"gk":   "高考",
+	"cet4": "CET4",
+	"cet6": "CET6",
+}
+
+// Tags translates ECDICT tag codes into Chinese exam labels.
+func Tags(tag string) []string {
+	var out []string
+	for _, code := range strings.Fields(tag) {
+		if label, ok := tagLabels[strings.ToLower(code)]; ok {
+			out = append(out, label)
+		}
+	}
+	return out
 }

@@ -240,6 +240,87 @@
     @apply flex flex-col gap-2 sm:flex-row sm:items-center;
   }
 
+  .lookup-tabs {
+    @apply mb-4 flex gap-2;
+  }
+
+  .lookup-form {
+    @apply mb-5 flex flex-col gap-3 sm:flex-row sm:items-end;
+  }
+
+  .lookup-input {
+    @apply text-lg;
+  }
+
+  .lookup-results {
+    @apply flex flex-col gap-4;
+  }
+
+  .lookup-card {
+    @apply flex flex-col gap-3;
+  }
+
+  .lookup-main {
+    @apply flex flex-col gap-2;
+  }
+
+  .lookup-word {
+    @apply flex flex-wrap items-baseline gap-2;
+  }
+
+  .translation-lines {
+    @apply list-disc pl-5;
+  }
+
+  .definition {
+    @apply text-sm text-muted;
+  }
+
+  .tags {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .lookup-actions {
+    @apply flex flex-col gap-2 border-t-2 border-dashed border-ink/20 pt-3;
+  }
+
+  .add-form {
+    @apply flex flex-col gap-2 sm:flex-row sm:items-center;
+  }
+
+  .select {
+    @apply sm:max-w-[12rem];
+  }
+
+  .examples-slot {
+    @apply text-sm;
+  }
+
+  .examples {
+    @apply flex flex-col gap-2;
+  }
+
+  .example-en {
+    @apply font-semibold;
+  }
+
+  .example-zh {
+    @apply text-muted;
+  }
+
+  .muted-text {
+    @apply text-sm text-muted;
+  }
+
+  .htmx-indicator {
+    @apply hidden;
+  }
+
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator {
+    @apply block;
+  }
+
   /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
   .app-nav {
     @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;

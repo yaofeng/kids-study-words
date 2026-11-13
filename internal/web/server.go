@@ -17,6 +17,7 @@ import (
 // Options configures a Server.
 type Options struct {
 	Store        *store.Store
+	Dict         Dictionary
 	Location     *time.Location
 	Version      string
 	CookieSecure bool
@@ -26,6 +27,7 @@ type Options struct {
 // Server owns routing, rendering, and authentication state.
 type Server struct {
 	store        *store.Store
+	dict         Dictionary
 	loc          *time.Location
 	version      string
 	cookieSecure bool
@@ -61,6 +63,7 @@ func New(opts Options) (*Server, error) {
 
 	s := &Server{
 		store:        opts.Store,
+		dict:         opts.Dict,
 		loc:          opts.Location,
 		version:      opts.Version,
 		cookieSecure: opts.CookieSecure,
@@ -92,6 +95,8 @@ func (s *Server) templateFuncs() template.FuncMap {
 		"FormatDate": s.FormatDate,
 		"Weekday":    s.Weekday,
 		"FirstLine":  firstLine,
+		"Lines":      Lines,
+		"Tags":       Tags,
 	}
 }
 
@@ -115,6 +120,11 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 	mux.HandleFunc("GET /notebooks/{id}/words/{wordID}/edit", s.handleWordEditPage)
 	mux.HandleFunc("POST /notebooks/{id}/words/{wordID}/edit", s.handleWordEditPost)
 	mux.HandleFunc("POST /notebooks/{id}/words/{wordID}/delete", s.handleWordDelete)
+
+	mux.HandleFunc("GET /lookup", s.handleLookupPage)
+	mux.HandleFunc("GET /lookup/results", s.handleLookupResults)
+	mux.HandleFunc("GET /lookup/examples", s.handleLookupExamples)
+	mux.HandleFunc("POST /words", s.handleAddWord)
 
 	static := http.StripPrefix("/static/", http.FileServerFS(staticFS))
 	mux.Handle("GET /static/", cacheControl(static, "max-age=3600"))

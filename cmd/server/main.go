@@ -16,6 +16,7 @@ import (
 
 	"github.com/yaofeng/kids-study-words/internal/auth"
 	"github.com/yaofeng/kids-study-words/internal/config"
+	"github.com/yaofeng/kids-study-words/internal/dict"
 	"github.com/yaofeng/kids-study-words/internal/store"
 	"github.com/yaofeng/kids-study-words/internal/web"
 	"golang.org/x/term"
@@ -145,8 +146,15 @@ func serve() error {
 	}
 	defer st.Close()
 
+	d, err := dict.Open(cfg.DictPath)
+	if err != nil {
+		return fmt.Errorf("dict.db not found at %s; run \"make dict\" or use the Docker image: %w", cfg.DictPath, err)
+	}
+	defer d.Close()
+
 	app, err := web.New(web.Options{
 		Store:        st,
+		Dict:         d,
 		Location:     cfg.Location,
 		Version:      version,
 		CookieSecure: cfg.CookieSecure,
