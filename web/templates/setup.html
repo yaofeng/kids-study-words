@@ -3,7 +3,7 @@
   <div class="auth-hero">{{template "owl" .}}</div>
   <h1 class="auth-title">欢迎来到少儿背单词</h1>
   <p class="auth-subtitle">先创建一个账号，之后用它登录。</p>
-  {{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+  {{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
   <form method="post" action="/setup" class="form-stack">
     {{template "csrf" .}}
     <label class="field">

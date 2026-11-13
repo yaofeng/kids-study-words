@@ -3,7 +3,7 @@
   <div class="auth-hero">{{template "owl" .}}</div>
   <h1 class="auth-title">少儿背单词</h1>
   <p class="auth-subtitle">每天几分钟，把新词变成老朋友。</p>
-  {{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+  {{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
   <form method="post" action="/login" class="form-stack">
     {{template "csrf" .}}
     <label class="field">

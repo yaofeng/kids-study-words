@@ -4,7 +4,7 @@
   <p class="page-subtitle">给单词分分类，回忆时按本练习。</p>
 </header>
 
-{{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+{{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
 
 <form method="post" action="/notebooks" class="card create-row">
   {{template "csrf" .}}

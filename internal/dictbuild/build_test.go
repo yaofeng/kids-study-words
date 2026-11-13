@@ -111,3 +111,33 @@ func TestBuildSkipsBadSentences(t *testing.T) {
 		t.Fatalf("dedupe/short filter failed: %+v", stats)
 	}
 }
+
+func TestBuildTurnsEscapedNewlinesIntoLineBreaks(t *testing.T) {
+	dir := t.TempDir()
+	csvPath := filepath.Join(dir, "ecdict.csv")
+	content := "word,phonetic,definition,translation,pos,collins,oxford,tag,bnc,frq,exchange,detail,audio\n" +
+		"apple,/ˈæpl/,a round fruit,n. 苹果\\n一个苹果,n,3,1,zk,100,200,,,\n"
+	if err := os.WriteFile(csvPath, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	tsvPath := filepath.Join(dir, "cmn.txt")
+	if err := os.WriteFile(tsvPath, []byte("I ate an apple.\t我吃了一个苹果。\tCC-BY\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(dir, "dict.db")
+	if _, err := dictbuild.Build(csvPath, tsvPath, out); err != nil {
+		t.Fatal(err)
+	}
+	d, err := dict.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	entry, err := d.Lookup(context.Background(), "apple")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if entry.Translation != "n. 苹果\n一个苹果" {
+		t.Fatalf("translation=%q", entry.Translation)
+	}
+}

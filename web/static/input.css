@@ -37,6 +37,21 @@
       radial-gradient(circle at 88% 22%, rgba(185, 167, 230, 0.16) 0 16px, transparent 17px);
     background-repeat: no-repeat;
   }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
+    outline: 3px solid #237a72;
+    outline-offset: 2px;
+  }
+}
+
+/* Decorative clouds and stars sit behind everything. */
+.bg-doodles {
+  @apply pointer-events-none fixed inset-0 -z-10 h-full w-full;
 }
 
 @layer components {
@@ -45,7 +60,7 @@
   }
 
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border-2 border-ink bg-paper px-5 py-2 font-bold text-ink shadow-sticker transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border-2 border-ink bg-paper px-5 py-2 font-bold text-ink shadow-sticker transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none whitespace-nowrap;
   }
 
   .btn-primary {
@@ -116,12 +131,16 @@
     @apply mt-4;
   }
 
-  .form-error {
-    @apply rounded-2xl border-2 border-coral-dark bg-coral/20 px-4 py-3 font-bold text-coral-dark;
+  .alert {
+    @apply rounded-2xl border-2 px-4 py-3 font-bold;
   }
 
-  .flash {
-    @apply mb-4 rounded-2xl border-2 border-teal-dark bg-teal/15 px-4 py-3 font-bold text-teal-dark;
+  .alert-error {
+    @apply border-coral-dark bg-coral/20 text-coral-dark;
+  }
+
+  .alert-success {
+    @apply mb-4 border-teal-dark bg-teal/15 text-teal-dark;
   }
 
   .auth-card {
@@ -189,7 +208,11 @@
   }
 
   .rename-form {
-    @apply flex flex-1 items-center gap-2;
+    @apply flex w-full items-center gap-2;
+  }
+
+  .rename-form .input {
+    @apply min-w-0 flex-1;
   }
 
   .badge {
@@ -382,7 +405,7 @@
   }
 
   .recall-word {
-    @apply break-words text-5xl font-extrabold leading-tight sm:text-6xl;
+    @apply break-words text-4xl font-extrabold leading-tight sm:text-6xl;
   }
 
   .recall-actions {
@@ -508,11 +531,11 @@
 
   /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
   .app-nav {
-    @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;
+    @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper pb-[env(safe-area-inset-bottom)] md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;
   }
 
   .nav-link {
-    @apply flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 text-sm font-bold text-muted md:min-h-[48px] md:flex-row md:justify-start md:gap-3 md:rounded-2xl md:px-4;
+    @apply flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 text-sm font-bold text-muted md:min-h-[48px] md:flex-none md:flex-row md:justify-start md:gap-3 md:rounded-2xl md:px-4;
   }
 
   .nav-link.is-active {
@@ -523,7 +546,11 @@
     @apply text-xl leading-none;
   }
 
-  /* Stars: full / half / empty using text glyphs. */
+}
+
+/* Stars sit outside @layer components because star-full/half/empty are built
+   from template data, so Tailwind's content scan cannot see them. */
+@layer components {
   .stars {
     @apply inline-flex items-center gap-0.5 align-middle;
   }
@@ -531,25 +558,25 @@
   .star {
     @apply text-lg leading-none;
   }
+}
 
-  .star-full::before {
-    content: '★';
-    color: #ffd966;
-    -webkit-text-stroke: 1px #3b3a36;
-  }
+.star-full::before {
+  content: '★';
+  color: #ffd966;
+  -webkit-text-stroke: 1px #3b3a36;
+}
 
-  .star-empty::before {
-    content: '☆';
-    color: #e3dccd;
-    -webkit-text-stroke: 1px #3b3a36;
-  }
+.star-empty::before {
+  content: '☆';
+  color: #e3dccd;
+  -webkit-text-stroke: 1px #3b3a36;
+}
 
-  .star-half::before {
-    content: '★';
-    background: linear-gradient(90deg, #ffd966 50%, #e3dccd 50%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-stroke: 1px #3b3a36;
-  }
+.star-half::before {
+  content: '★';
+  background: linear-gradient(90deg, #ffd966 50%, #e3dccd 50%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1px #3b3a36;
 }

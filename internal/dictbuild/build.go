@@ -136,6 +136,10 @@ func importEntries(db *sql.DB, path string) (int, error) {
 		n, _ := strconv.Atoi(field(rec, name))
 		return n
 	}
+	// ECDICT stores line breaks inside a cell as the two characters \n.
+	text := func(rec []string, name string) string {
+		return strings.ReplaceAll(field(rec, name), `\n`, "\n")
+	}
 
 	count := 0
 	for {
@@ -150,8 +154,8 @@ func importEntries(db *sql.DB, path string) (int, error) {
 		if word == "" {
 			continue
 		}
-		if _, err := stmt.Exec(word, field(rec, "phonetic"), field(rec, "translation"),
-			field(rec, "definition"), field(rec, "pos"), number(rec, "collins"),
+		if _, err := stmt.Exec(word, field(rec, "phonetic"), text(rec, "translation"),
+			text(rec, "definition"), field(rec, "pos"), number(rec, "collins"),
 			number(rec, "oxford"), field(rec, "tag"), number(rec, "bnc"),
 			number(rec, "frq"), field(rec, "exchange")); err != nil {
 			return 0, fmt.Errorf("insert entry %q: %w", word, err)

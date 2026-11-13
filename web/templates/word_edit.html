@@ -5,7 +5,7 @@
   <p class="page-subtitle">只改释义和例句，熟练度与回忆记录保持不变。</p>
 </header>
 
-{{if .Error}}<p class="form-error" role="alert">{{.Error}}</p>{{end}}
+{{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
 
 <form method="post" action="/notebooks/{{.Notebook.ID}}/words/{{.Word.ID}}/edit" class="card form-stack">
   {{template "csrf" .}}
