@@ -82,6 +82,15 @@
 </section>
 
 <section class="card settings-section">
+  <h2 class="settings-title">智能例句</h2>
+  {{if .AIEnabled}}
+  <p class="muted-text">已启用（模型 {{.AIModel}}{{if .AIHost}}，服务 {{.AIHost}}{{end}}）。查词时如果本地例句不足，会请它补充例句并缓存。</p>
+  {{else}}
+  <p class="muted-text">未启用。配置环境变量 AI_BASE_URL、AI_API_KEY、AI_MODEL 后重启，就能在本地例句不足时补充 AI 例句。</p>
+  {{end}}
+</section>
+
+<section class="card settings-section">
   <h2 class="settings-title">关于</h2>
   <p class="muted-text">少儿背单词 · 版本 {{.Version}}</p>
   <p class="muted-text">开源项目，源码在 <a class="link" href="{{.RepoURL}}" rel="noopener">GitHub</a>，使用 MIT 许可证。</p>

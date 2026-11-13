@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/yaofeng/kids-study-words/internal/ai"
 	"github.com/yaofeng/kids-study-words/internal/auth"
 	"github.com/yaofeng/kids-study-words/internal/config"
 	"github.com/yaofeng/kids-study-words/internal/dict"
@@ -152,9 +153,15 @@ func serve() error {
 	}
 	defer d.Close()
 
+	var exampleAI web.ExampleAI
+	if client := ai.New(cfg.AIBaseURL, cfg.AIAPIKey, cfg.AIModel, 15*time.Second); client.Enabled() {
+		exampleAI = client
+	}
+
 	app, err := web.New(web.Options{
 		Store:        st,
 		Dict:         d,
+		AI:           exampleAI,
 		Location:     cfg.Location,
 		Version:      version,
 		CookieSecure: cfg.CookieSecure,

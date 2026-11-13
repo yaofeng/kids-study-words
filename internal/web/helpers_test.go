@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/yaofeng/kids-study-words/internal/ai"
 	"github.com/yaofeng/kids-study-words/internal/auth"
 	"github.com/yaofeng/kids-study-words/internal/dict"
 	"github.com/yaofeng/kids-study-words/internal/store"
@@ -208,4 +209,26 @@ func (f fakeDict) Examples(_ context.Context, _, _ string, limit int) ([]dict.Se
 		out = out[:limit]
 	}
 	return out, nil
+}
+
+// fakeAI implements ExampleAI for handler tests.
+type fakeAI struct {
+	enabled bool
+	model   string
+	host    string
+	ex      []ai.Example
+	err     error
+	calls   int
+}
+
+func (f *fakeAI) Enabled() bool { return f.enabled }
+func (f *fakeAI) Model() string { return f.model }
+func (f *fakeAI) Host() string  { return f.host }
+
+func (f *fakeAI) Examples(_ context.Context, _, _ string, _ []string) ([]ai.Example, error) {
+	f.calls++
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.ex, nil
 }

@@ -12,7 +12,10 @@ const repoURL = "https://github.com/yaofeng/kids-study-words"
 // settingsView is the template data for the settings page.
 type settingsView struct {
 	Base
-	RepoURL string
+	RepoURL   string
+	AIEnabled bool
+	AIModel   string
+	AIHost    string
 }
 
 func (s *Server) settingsData(w http.ResponseWriter, r *http.Request) (settingsView, bool) {
@@ -20,7 +23,13 @@ func (s *Server) settingsData(w http.ResponseWriter, r *http.Request) (settingsV
 	if !ok {
 		return settingsView{}, false
 	}
-	return settingsView{Base: base, RepoURL: repoURL}, true
+	view := settingsView{Base: base, RepoURL: repoURL}
+	if s.ai != nil && s.ai.Enabled() {
+		view.AIEnabled = true
+		view.AIModel = s.ai.Model()
+		view.AIHost = s.ai.Host()
+	}
+	return view, true
 }
 
 func (s *Server) renderSettingsData(w http.ResponseWriter, r *http.Request, status int, msg string) {

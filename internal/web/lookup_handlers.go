@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -96,7 +97,7 @@ func (s *Server) handleLookupExamples(w http.ResponseWriter, r *http.Request) {
 	if word != "" && s.dict != nil {
 		entry, err := s.dict.Lookup(r.Context(), word)
 		if err == nil {
-			data.Sentences = s.snapshotExamples(r.Context(), entry)
+			data.Sentences = s.examplesFor(r.Context(), entry)
 		} else if !errors.Is(err, dict.ErrNotFound) {
 			data.Message = "例句暂时找不到了。"
 		}
@@ -104,13 +105,47 @@ func (s *Server) handleLookupExamples(w http.ResponseWriter, r *http.Request) {
 	_ = s.renderer.fragment(w, http.StatusOK, "examples", data)
 }
 
-// snapshotExamples copies up to two local sentences into the stored word. It
-// never fails the add flow; Task 13 adds AI cache/generation here.
+// examplesFor finds example sentences for a lookup: cached AI output first,
+// then local pairs, then (only when local is thin) a fresh AI request.
+func (s *Server) examplesFor(ctx context.Context, entry dict.Entry) []store.Example {
+	if cached, ok, err := s.store.CachedExamples(ctx, entry.Word); err == nil && ok && len(cached) > 0 {
+		return cached
+	}
+	local := s.localExamples(ctx, entry, 2)
+	if len(local) >= 2 || s.ai == nil || !s.ai.Enabled() {
+		return local
+	}
+
+	forms := dict.Forms(entry.Word, entry.Exchange)
+	generated, err := s.ai.Examples(ctx, entry.Word, entry.Translation, forms)
+	if err != nil || len(generated) == 0 {
+		return local
+	}
+	examples := make([]store.Example, 0, len(generated))
+	for _, ex := range generated {
+		examples = append(examples, store.Example{EN: ex.EN, ZH: ex.ZH, Source: "ai"})
+	}
+	if err := s.store.SaveExamples(ctx, entry.Word, s.ai.Model(), examples); err != nil {
+		slog.Warn("cache AI examples", "word", entry.Word, "err", err)
+	}
+	return examples
+}
+
+// snapshotExamples copies cached or local examples into a newly added word. It
+// never calls the AI service, so adding a word stays fast.
 func (s *Server) snapshotExamples(ctx context.Context, entry dict.Entry) []store.Example {
+	if cached, ok, err := s.store.CachedExamples(ctx, entry.Word); err == nil && ok && len(cached) > 0 {
+		return cached
+	}
+	return s.localExamples(ctx, entry, 2)
+}
+
+// localExamples converts up to limit local sentences into stored examples.
+func (s *Server) localExamples(ctx context.Context, entry dict.Entry, limit int) []store.Example {
 	if s.dict == nil {
 		return nil
 	}
-	sentences, err := s.dict.Examples(ctx, entry.Word, entry.Exchange, 2)
+	sentences, err := s.dict.Examples(ctx, entry.Word, entry.Exchange, limit)
 	if err != nil {
 		return nil
 	}

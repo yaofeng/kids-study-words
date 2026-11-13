@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -9,16 +10,26 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/yaofeng/kids-study-words/internal/ai"
 	"github.com/yaofeng/kids-study-words/internal/auth"
 	"github.com/yaofeng/kids-study-words/internal/recall"
 	"github.com/yaofeng/kids-study-words/internal/store"
 	assets "github.com/yaofeng/kids-study-words/web"
 )
 
+// ExampleAI generates extra example sentences for a word.
+type ExampleAI interface {
+	Enabled() bool
+	Model() string
+	Host() string
+	Examples(ctx context.Context, word, translation string, forms []string) ([]ai.Example, error)
+}
+
 // Options configures a Server.
 type Options struct {
 	Store        *store.Store
 	Dict         Dictionary
+	AI           ExampleAI
 	Location     *time.Location
 	Version      string
 	CookieSecure bool
@@ -29,6 +40,7 @@ type Options struct {
 type Server struct {
 	store        *store.Store
 	dict         Dictionary
+	ai           ExampleAI
 	loc          *time.Location
 	version      string
 	cookieSecure bool
@@ -66,6 +78,7 @@ func New(opts Options) (*Server, error) {
 	s := &Server{
 		store:        opts.Store,
 		dict:         opts.Dict,
+		ai:           opts.AI,
 		loc:          opts.Location,
 		version:      opts.Version,
 		cookieSecure: opts.CookieSecure,
