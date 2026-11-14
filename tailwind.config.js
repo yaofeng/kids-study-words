@@ -4,23 +4,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cream: '#FFF8EE',
+        sky: '#F2FAFF',
         paper: '#FFFFFF',
-        ink: '#3B3A36',
-        muted: '#7A756C',
-        line: '#3B3A36',
-        teal: '#4FB3A9',
-        'teal-dark': '#237A72',
-        coral: '#FF9F80',
-        'coral-dark': '#D9633F',
+        ink: '#1E2D42',
+        muted: '#5B6B80',
+        line: '#1E2D42',
+        blue: '#3D9BF0',
+        'blue-deep': '#1F73D6',
+        'blue-text': '#15529E',
+        'blue-soft': '#A9DCFF',
         sun: '#FFD966',
+        mint: '#66D9C7',
+        coral: '#FF8A73',
+        'coral-dark': '#A93A22',
         lilac: '#B9A7E6',
       },
       fontFamily: {
         rounded: ['Nunito', 'system-ui', '-apple-system', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
-      },
-      boxShadow: {
-        sticker: '3px 3px 0 #3B3A36',
       },
       borderRadius: {
         blob: '20px',

@@ -1,21 +1,59 @@
 {{define "csrf"}}<input type="hidden" name="csrf_token" value="{{.CSRF}}">{{end}}
 
+{{define "icon_search"}}<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+  <circle cx="10.8" cy="10.8" r="6.4" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="2"/>
+  <path d="M15.6 15.6 20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>{{end}}
+
+{{define "icon_book"}}<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+  <path d="M7 4.5h9.6a2 2 0 0 1 2 2V19H8a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 8 4.5Z" fill="currentColor" fill-opacity=".10" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M7 4.5V19" stroke="currentColor" stroke-width="2"/>
+  <path d="M10.8 9h5M10.8 12.2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="M14.2 4.5v4l1.6-1.1 1.6 1.1v-4" fill="#FFD966" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+</svg>{{end}}
+
+{{define "icon_cards"}}<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+  <rect x="5" y="7.2" width="11.5" height="13" rx="2.4" fill="currentColor" fill-opacity=".10" stroke="currentColor" stroke-width="2"/>
+  <path d="M8.4 4.5h8.8a2 2 0 0 1 2 2v9.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="M8.6 12h4.2M8.6 15.2h2.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18.8 4.2l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5Z" fill="#FFD966" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>
+</svg>{{end}}
+
+{{define "icon_calendar"}}<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+  <rect x="4" y="6" width="16" height="14" rx="2.6" fill="currentColor" fill-opacity=".08" stroke="currentColor" stroke-width="2"/>
+  <path d="M4 10.6h16M8.2 4v3.6M15.8 4v3.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="12" cy="15.3" r="1.9" fill="#FFD966" stroke="currentColor" stroke-width="1.2"/>
+</svg>{{end}}
+
+{{define "icon_settings"}}<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+  <path d="M4 7.2h9.2M17.8 7.2H20M4 16.8h2.2M10.8 16.8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="15.5" cy="7.2" r="2.2" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="2"/>
+  <circle cx="8.5" cy="16.8" r="2.2" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="2"/>
+</svg>{{end}}
+
+{{define "icon_timer"}}<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+  <circle cx="12" cy="13" r="7.2" fill="currentColor" fill-opacity=".08" stroke="currentColor" stroke-width="2"/>
+  <path d="M12 13V9.2M9.4 3.8h5.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 13l2.6 1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>{{end}}
+
+
 {{define "nav"}}
 <nav class="app-nav" aria-label="主导航">
   <a href="/lookup" class="nav-link{{if eq .Active "lookup"}} is-active{{end}}">
-    <span class="nav-icon" aria-hidden="true">🔎</span><span class="nav-label">查词</span>
+    <span class="nav-icon" aria-hidden="true">{{template "icon_search"}}</span><span class="nav-label">查词</span>
   </a>
   <a href="/notebooks" class="nav-link{{if eq .Active "notebooks"}} is-active{{end}}">
-    <span class="nav-icon" aria-hidden="true">📒</span><span class="nav-label">生词本</span>
+    <span class="nav-icon" aria-hidden="true">{{template "icon_book"}}</span><span class="nav-label">生词本</span>
   </a>
   <a href="/recall" class="nav-link{{if eq .Active "recall"}} is-active{{end}}">
-    <span class="nav-icon" aria-hidden="true">🃏</span><span class="nav-label">回忆</span>
+    <span class="nav-icon" aria-hidden="true">{{template "icon_cards"}}</span><span class="nav-label">回忆</span>
   </a>
   <a href="/records" class="nav-link{{if eq .Active "records"}} is-active{{end}}">
-    <span class="nav-icon" aria-hidden="true">📅</span><span class="nav-label">记录</span>
+    <span class="nav-icon" aria-hidden="true">{{template "icon_calendar"}}</span><span class="nav-label">记录</span>
   </a>
   <a href="/settings" class="nav-link{{if eq .Active "settings"}} is-active{{end}}">
-    <span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-label">设置</span>
+    <span class="nav-icon" aria-hidden="true">{{template "icon_settings"}}</span><span class="nav-label">设置</span>
   </a>
 </nav>
 {{end}}
@@ -23,15 +61,15 @@
 {{define "stars"}}<span class="stars" role="img" aria-label="{{StarLabel .}}">{{range Stars .}}<span class="star star-{{.Fill}}" aria-hidden="true"></span>{{end}}</span>{{end}}
 
 {{define "owl"}}<svg class="owl" viewBox="0 0 120 120" role="img" aria-label="小猫头鹰" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="60" cy="66" rx="38" ry="40" fill="#FFD966" stroke="#3B3A36" stroke-width="4"/>
-  <path d="M26 34 L38 46 L22 50 Z" fill="#FF9F80" stroke="#3B3A36" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M94 34 L82 46 L98 50 Z" fill="#FF9F80" stroke="#3B3A36" stroke-width="4" stroke-linejoin="round"/>
-  <circle cx="46" cy="58" r="12" fill="#FFFFFF" stroke="#3B3A36" stroke-width="4"/>
-  <circle cx="74" cy="58" r="12" fill="#FFFFFF" stroke="#3B3A36" stroke-width="4"/>
-  <circle cx="46" cy="58" r="5" fill="#3B3A36"/>
-  <circle cx="74" cy="58" r="5" fill="#3B3A36"/>
-  <path d="M60 66 L54 74 L66 74 Z" fill="#FF9F80" stroke="#3B3A36" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M42 90 Q60 100 78 90" stroke="#3B3A36" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="60" cy="66" rx="38" ry="40" fill="#FFD966" stroke="#1E2D42" stroke-width="4"/>
+  <path d="M26 34 L38 46 L22 50 Z" fill="#FF9F80" stroke="#1E2D42" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M94 34 L82 46 L98 50 Z" fill="#FF9F80" stroke="#1E2D42" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="46" cy="58" r="12" fill="#FFFFFF" stroke="#1E2D42" stroke-width="4"/>
+  <circle cx="74" cy="58" r="12" fill="#FFFFFF" stroke="#1E2D42" stroke-width="4"/>
+  <circle cx="46" cy="58" r="5" fill="#1E2D42"/>
+  <circle cx="74" cy="58" r="5" fill="#1E2D42"/>
+  <path d="M60 66 L54 74 L66 74 Z" fill="#FF9F80" stroke="#1E2D42" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M42 90 Q60 100 78 90" stroke="#1E2D42" stroke-width="4" stroke-linecap="round"/>
 </svg>{{end}}
 
 {{define "lookup_results"}}
@@ -53,7 +91,7 @@
       {{if or (Tags .Tag) .Notebooks}}
       <p class="tags">
         {{range Tags .Tag}}<span class="badge">{{.}}</span>{{end}}
-        {{range .Notebooks}}<span class="badge badge-notebook"><span aria-hidden="true">📒</span> {{.}}</span>{{end}}
+        {{range .Notebooks}}<span class="badge badge-notebook"><span class="badge-icon" aria-hidden="true">{{template "icon_book"}}</span> {{.}}</span>{{end}}
       </p>
       {{end}}
     </div>
@@ -103,7 +141,7 @@
 
 {{define "recall_progress"}}
 <div class="recall-progress">
-  <span>⏱ <span class="recall-timer" data-round-timer data-start="{{.State.StartedAt.Unix}}">00:00</span></span>
+  <span><span class="timer-icon" aria-hidden="true">{{template "icon_timer"}}</span> <span class="recall-timer" data-round-timer data-start="{{.State.StartedAt.Unix}}">00:00</span></span>
   <span>认识 {{.State.Known}} / {{.State.Total}}</span>
 </div>
 {{end}}

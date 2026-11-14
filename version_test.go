@@ -32,9 +32,11 @@ func TestVersionLiteralOnlyInDotVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Documentation may record release numbers; code and static assets must
+	// still read the version from .version.
 	skipDirs := map[string]bool{
 		".git": true, ".superpowers": true, "node_modules": true,
-		"data": true, "data-src": true, "dist": true,
+		"data": true, "data-src": true, "dist": true, "docs": true,
 	}
 	skipExts := map[string]bool{
 		".png": true, ".jpg": true, ".woff2": true, ".db": true, ".sqlite": true,

@@ -2,29 +2,29 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{{.Title}} · 少儿背单词</title>
   <link rel="stylesheet" href="/static/app.css?v={{.AssetVersion}}">
   <script src="/static/htmx.min.js?v={{.AssetVersion}}" defer></script>
   <script src="/static/app.js?v={{.AssetVersion}}" defer></script>
 </head>
-<body class="min-h-screen bg-cream font-rounded text-ink" hx-headers='{"X-CSRF-Token":"{{.CSRF}}"}'>
+<body class="min-h-screen bg-sky font-rounded text-ink" hx-headers='{"X-CSRF-Token":"{{.CSRF}}"}'>
   <svg class="bg-doodles" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-    <g fill="#B9A7E6" opacity="0.13">
+    <g fill="#FFFFFF" opacity="0.45">
       <path d="M120 150c0-22 18-40 40-40 6 0 12 1 17 4 8-18 26-30 47-30 28 0 51 23 51 51h6c15 0 27 12 27 27s-12 27-27 27H160c-22 0-40-18-40-39z"/>
       <path d="M1040 760c0-18 15-33 33-33 5 0 10 1 14 3 7-15 22-25 39-25 23 0 42 19 42 42h5c12 0 22 10 22 22s-10 22-22 22h-100c-18 0-33-14-33-31z"/>
     </g>
-    <g fill="#FFD966" opacity="0.4">
+    <g fill="#FFFFFF" opacity="0.50">
       <path d="M1220 120l8 20 21 2-16 14 5 21-18-12-19 12 5-21-16-14 22-2z"/>
       <path d="M250 700l6 15 16 1-12 11 4 16-14-9-14 9 4-16-12-11 16-1z"/>
       <path d="M700 80l5 12 13 1-10 9 3 13-11-7-12 7 3-13-10-9 13-1z"/>
     </g>
-    <g fill="#4FB3A9" opacity="0.1">
+    <g fill="#BFE3FF" opacity="0.35">
       <path d="M1180 420c0-20 16-36 36-36 5 0 10 1 14 3 7-16 23-27 41-27 25 0 45 20 45 45h5c13 0 24 11 24 24s-11 24-24 24h-105c-20 0-36-15-36-33z"/>
     </g>
   </svg>
   {{if .User.ID}}{{template "nav" .}}{{end}}
-  <main class="mx-auto w-full max-w-4xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-10 md:pl-72">
+  <main class="app-main mx-auto w-full max-w-4xl">
     {{if .Flash}}<div class="alert alert-success" role="status">{{.Flash}}</div>{{end}}
     {{template "content" .}}
   </main>
