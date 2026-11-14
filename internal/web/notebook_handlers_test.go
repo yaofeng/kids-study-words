@@ -179,6 +179,26 @@ func TestNotebookCardUsesSettingsMenu(t *testing.T) {
 	}
 }
 
+func TestNotebookDefaultBadgeSitsOnTheCorner(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	body := tc.get("/notebooks").Body.String()
+	cardAt := strings.Index(body, "card notebook-card")
+	if cardAt < 0 {
+		t.Fatalf("notebook card missing: %s", body)
+	}
+	card := body[cardAt:]
+	card = card[:strings.Index(card, "</li>")]
+	badge := `<span class="badge badge-default notebook-corner">默认</span>`
+	badgeAt := strings.Index(card, badge)
+	if badgeAt < 0 {
+		t.Fatalf("default badge should be a corner sticker: %s", card)
+	}
+	titleAt := strings.Index(card, `<h2 class="notebook-name">`)
+	if titleAt < 0 || badgeAt > titleAt {
+		t.Fatalf("default badge should render before the title row: %s", card)
+	}
+}
+
 func TestNotebookWordCardUsesSwipeLayout(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	w := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")

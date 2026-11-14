@@ -188,7 +188,15 @@
   }
 
   .notebook-card {
-    @apply flex flex-col gap-3;
+    @apply relative flex flex-col gap-3;
+  }
+
+  .notebook-corner {
+    @apply absolute -right-3 -top-3 rotate-3 shadow-sticker;
+  }
+
+  .notebook-card .notebook-name {
+    @apply pr-12;
   }
 
   .notebook-head {
@@ -204,7 +212,7 @@
   }
 
   .notebook-foot {
-    @apply flex items-center justify-end gap-2 border-t-2 border-dashed border-ink/20 pt-3;
+    @apply flex items-center justify-end gap-2;
   }
 
   .btn-icon {
