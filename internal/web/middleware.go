@@ -46,7 +46,7 @@ func csrfFrom(r *http.Request) string {
 // publicPath lists routes that do not require an account or a session.
 func publicPath(path string) bool {
 	switch path {
-	case "/healthz", "/login", "/setup":
+	case "/healthz", "/login", "/setup", "/register":
 		return true
 	}
 	return strings.HasPrefix(path, "/static/")

@@ -2,7 +2,9 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // CountUsers returns how many accounts exist.
@@ -31,12 +33,29 @@ func (s *Store) CreateFirstUser(ctx context.Context, username, hash, defaultNote
 	if n > 0 {
 		return User{}, Notebook{}, ErrSetupComplete
 	}
+	return s.insertUser(ctx, tx, username, hash, defaultNotebook)
+}
 
+// CreateUser creates another account and its default notebook. It returns
+// ErrDuplicate when the username is already taken.
+func (s *Store) CreateUser(ctx context.Context, username, hash, defaultNotebook string) (User, Notebook, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return User{}, Notebook{}, fmt.Errorf("begin: %w", err)
+	}
+	defer tx.Rollback()
+	return s.insertUser(ctx, tx, username, hash, defaultNotebook)
+}
+
+func (s *Store) insertUser(ctx context.Context, tx *sql.Tx, username, hash, defaultNotebook string) (User, Notebook, error) {
 	now := TimeNow()
 	res, err := tx.ExecContext(ctx,
 		`INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)`,
 		username, hash, formatTime(now))
 	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "unique") {
+			return User{}, Notebook{}, ErrDuplicate
+		}
 		return User{}, Notebook{}, fmt.Errorf("insert user: %w", err)
 	}
 	userID, err := res.LastInsertId()

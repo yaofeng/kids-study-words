@@ -1,0 +1,33 @@
+{{define "content"}}
+<section class="auth-card">
+  <div class="auth-hero">{{template "owl" .}}</div>
+  <h1 class="auth-title">注册新用户</h1>
+  <p class="auth-subtitle">先用已有的账号确认身份，再创建新账号。</p>
+  {{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
+  <form method="post" action="/register" class="form-stack">
+    {{template "csrf" .}}
+    <label class="field">
+      <span class="field-label">现有账号用户名</span>
+      <input class="input" type="text" name="authorizer" value="{{.Authorizer}}" maxlength="32" autocomplete="username" required>
+    </label>
+    <label class="field">
+      <span class="field-label">现有账号密码</span>
+      <input class="input" type="password" name="authorizer_password" autocomplete="current-password" required>
+    </label>
+    <label class="field">
+      <span class="field-label">新用户名</span>
+      <input class="input" type="text" name="username" value="{{.Username}}" maxlength="32" autocomplete="username" required>
+    </label>
+    <label class="field">
+      <span class="field-label">新密码（至少 6 位）</span>
+      <input class="input" type="password" name="password" autocomplete="new-password" required>
+    </label>
+    <label class="field">
+      <span class="field-label">再输一次新密码</span>
+      <input class="input" type="password" name="confirm" autocomplete="new-password" required>
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">创建账号</button>
+  </form>
+  <a class="btn btn-block" href="/login">← 返回登录</a>
+</section>
+{{end}}

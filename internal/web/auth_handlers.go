@@ -81,6 +81,112 @@ func (s *Server) handleSetupPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/lookup", http.StatusSeeOther)
 }
 
+// handleRegisterPage shows the sign-up form. Registration needs an existing
+// account to vouch for the new one.
+func (s *Server) handleRegisterPage(w http.ResponseWriter, r *http.Request) {
+	n, err := s.store.CountUsers(r.Context())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if n == 0 {
+		http.Redirect(w, r, "/setup", http.StatusSeeOther)
+		return
+	}
+	if currentUser(r).ID != 0 {
+		http.Redirect(w, r, "/lookup", http.StatusSeeOther)
+		return
+	}
+	data, ok := s.pageData(w, r, "注册新用户", "")
+	if !ok {
+		return
+	}
+	_ = s.renderer.page(w, http.StatusOK, "register", data)
+}
+
+// handleRegisterPost creates an account after checking the credentials of an
+// existing account.
+func (s *Server) handleRegisterPost(w http.ResponseWriter, r *http.Request) {
+	n, err := s.store.CountUsers(r.Context())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if n == 0 {
+		http.Redirect(w, r, "/setup", http.StatusSeeOther)
+		return
+	}
+
+	ip := clientIP(r)
+	if !s.limiter.Allow(ip) {
+		data, ok := s.pageData(w, r, "注册新用户", "")
+		if !ok {
+			return
+		}
+		data.Error = "试了太多次，请稍后再试。"
+		_ = s.renderer.page(w, http.StatusTooManyRequests, "register", data)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		s.renderError(w, r, http.StatusBadRequest, "表单格式不对。")
+		return
+	}
+	authorizer := strings.TrimSpace(r.PostForm.Get("authorizer"))
+	authorizerPassword := r.PostForm.Get("authorizer_password")
+	username := strings.TrimSpace(r.PostForm.Get("username"))
+	password := r.PostForm.Get("password")
+	confirm := r.PostForm.Get("confirm")
+
+	renderForm := func(msg string) {
+		data, ok := s.pageData(w, r, "注册新用户", "")
+		if !ok {
+			return
+		}
+		data.Authorizer = authorizer
+		data.Username = username
+		data.Error = msg
+		_ = s.renderer.page(w, http.StatusOK, "register", data)
+	}
+
+	user, err := s.store.UserByUsername(r.Context(), authorizer)
+	if err != nil || !auth.CheckPassword(user.PasswordHash, authorizerPassword) {
+		s.limiter.Fail(ip)
+		renderForm("现有账号的用户名或密码不对。")
+		return
+	}
+	s.limiter.Reset(ip)
+
+	switch {
+	case !auth.ValidUsername(username):
+		renderForm("新用户名需为 1–32 个字符，不能为空。")
+		return
+	case !auth.ValidPassword(password):
+		renderForm("密码至少 6 位，最多 72 字节。")
+		return
+	case password != confirm:
+		renderForm("两次输入的密码不一致。")
+		return
+	}
+
+	hash, err := auth.HashPassword(password)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if _, _, err := s.store.CreateUser(r.Context(), username, hash, defaultNotebookName); err != nil {
+		if errors.Is(err, store.ErrDuplicate) {
+			renderForm("这个用户名已经有人用了，换一个吧。")
+			return
+		}
+		s.fail(w, r, err)
+		return
+	}
+
+	setFlash(w, "新账号已创建，用新用户名登录吧。")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
 func (s *Server) handleLoginPage(w http.ResponseWriter, r *http.Request) {
 	n, err := s.store.CountUsers(r.Context())
 	if err != nil {

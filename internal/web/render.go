@@ -20,6 +20,7 @@ import (
 type Base struct {
 	Title           string
 	Username        string
+	Authorizer      string
 	User            store.User
 	CSRF            string
 	Active          string

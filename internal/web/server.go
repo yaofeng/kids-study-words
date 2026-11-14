@@ -144,6 +144,8 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 	mux.HandleFunc("POST /setup", s.handleSetupPost)
 	mux.HandleFunc("GET /login", s.handleLoginPage)
 	mux.HandleFunc("POST /login", s.handleLoginPost)
+	mux.HandleFunc("GET /register", s.handleRegisterPage)
+	mux.HandleFunc("POST /register", s.handleRegisterPost)
 	mux.HandleFunc("POST /logout", s.handleLogout)
 
 	mux.HandleFunc("GET /notebooks", s.handleNotebooksPage)
