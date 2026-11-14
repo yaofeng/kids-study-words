@@ -188,15 +188,24 @@
   }
 
   .notebook-card {
-    @apply relative flex flex-col gap-3;
+    @apply relative grid items-center gap-x-3 gap-y-1;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .notebook-corner {
-    @apply absolute -right-3 -top-3 rotate-3 shadow-sticker;
+  .notebook-line {
+    @apply flex min-w-0 flex-wrap items-center gap-2;
   }
 
-  .notebook-card .notebook-name {
-    @apply pr-12;
+  .notebook-card .notebook-meta {
+    @apply col-span-2;
+  }
+
+  .notebook-card .notebook-foot {
+    @apply col-start-2 row-start-1;
+  }
+
+  .notebook-card .notebook-settings {
+    @apply col-span-2 mt-2;
   }
 
   .notebook-head {

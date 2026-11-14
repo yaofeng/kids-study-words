@@ -179,7 +179,7 @@ func TestNotebookCardUsesSettingsMenu(t *testing.T) {
 	}
 }
 
-func TestNotebookDefaultBadgeSitsOnTheCorner(t *testing.T) {
+func TestNotebookDefaultBadgeFollowsName(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	body := tc.get("/notebooks").Body.String()
 	cardAt := strings.Index(body, "card notebook-card")
@@ -188,14 +188,20 @@ func TestNotebookDefaultBadgeSitsOnTheCorner(t *testing.T) {
 	}
 	card := body[cardAt:]
 	card = card[:strings.Index(card, "</li>")]
-	badge := `<span class="badge badge-default notebook-corner">默认</span>`
-	badgeAt := strings.Index(card, badge)
-	if badgeAt < 0 {
-		t.Fatalf("default badge should be a corner sticker: %s", card)
+	lineAt := strings.Index(card, `class="notebook-line"`)
+	if lineAt < 0 {
+		t.Fatalf("notebook name row missing: %s", card)
 	}
-	titleAt := strings.Index(card, `<h2 class="notebook-name">`)
-	if titleAt < 0 || badgeAt > titleAt {
-		t.Fatalf("default badge should render before the title row: %s", card)
+	line := card[lineAt:]
+	line = line[:strings.Index(line, "</div>")]
+	if !strings.Contains(line, `class="notebook-name"`) {
+		t.Fatalf("notebook name should sit in the first line: %s", line)
+	}
+	if !strings.Contains(line, `class="badge badge-default">默认</span>`) {
+		t.Fatalf("default badge should follow the name: %s", line)
+	}
+	if strings.Contains(card, "notebook-corner") {
+		t.Fatalf("default badge should no longer be a corner sticker: %s", card)
 	}
 }
 

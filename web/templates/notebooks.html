@@ -19,8 +19,10 @@
 <ul class="notebook-grid">
   {{range .Notebooks}}
   <li class="card notebook-card">
-    {{if .IsDefault}}<span class="badge badge-default notebook-corner">默认</span>{{end}}
-    <h2 class="notebook-name">{{.Name}}</h2>
+    <div class="notebook-line">
+      <h2 class="notebook-name">{{.Name}}</h2>
+      {{if .IsDefault}}<span class="badge badge-default">默认</span>{{end}}
+    </div>
     <p class="notebook-meta">{{.WordCount}} 个单词 · 更新于 {{FormatDate .UpdatedAt}}</p>
 
     <div class="notebook-foot">
