@@ -86,6 +86,56 @@ func TestIconsAreInlineSVG(t *testing.T) {
 	}
 }
 
+func TestNegativeButtonsAreCoralGlass(t *testing.T) {
+	data, err := os.ReadFile("static/input.css")
+	if err != nil {
+		t.Fatalf("read input.css: %v", err)
+	}
+	css := string(data)
+
+	for _, selector := range []string{".btn-danger", ".btn-unknown"} {
+		block := ruleBlock(css, selector)
+		if block == "" {
+			t.Errorf("input.css is missing the %s rule", selector)
+			continue
+		}
+		if !strings.Contains(block, "rgba(255, 138, 115") {
+			t.Errorf("%s should use a translucent coral fill, not a solid slab", selector)
+		}
+		if !strings.Contains(block, "#A93A22") {
+			t.Errorf("%s should use coral-dark text for contrast", selector)
+		}
+		if strings.Contains(block, "background: #FF8A73") {
+			t.Errorf("%s still uses the solid coral background", selector)
+		}
+	}
+}
+
+func TestStarsUseFlatGlassColors(t *testing.T) {
+	data, err := os.ReadFile("static/input.css")
+	if err != nil {
+		t.Fatalf("read input.css: %v", err)
+	}
+	css := string(data)
+
+	for _, selector := range []string{".star-full::before", ".star-empty::before", ".star-half::before"} {
+		block := ruleBlock(css, selector)
+		if block == "" {
+			t.Errorf("input.css is missing the %s rule", selector)
+			continue
+		}
+		if strings.Contains(block, "-webkit-text-stroke") {
+			t.Errorf("%s still carries the old ink sticker outline", selector)
+		}
+	}
+	if !strings.Contains(ruleBlock(css, ".star-empty::before"), "#a9dcff") {
+		t.Error("empty stars should use the soft blue token, not the old gray")
+	}
+	if !strings.Contains(ruleBlock(css, ".star-half::before"), "#a9dcff") {
+		t.Error("half stars should use the soft blue token, not the old gray")
+	}
+}
+
 func TestNavHitAreasAndSafeArea(t *testing.T) {
 	data, err := os.ReadFile("static/input.css")
 	if err != nil {

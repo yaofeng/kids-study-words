@@ -87,9 +87,9 @@
   }
 
   .btn-danger {
-    background: #FF8A73;
-    border-color: rgba(255,255,255,.45);
-    color: #1E2D42;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .50), rgba(255, 255, 255, .14) 55%, rgba(255, 255, 255, .26)), rgba(255, 138, 115, .38);
+    border-color: rgba(255, 255, 255, .72);
+    color: #A93A22;
   }
 
   .btn-block {
@@ -531,9 +531,9 @@
   }
 
   .btn-unknown {
-    background: #FF8A73;
-    border-color: rgba(255,255,255,.45);
-    color: #1E2D42;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .50), rgba(255, 255, 255, .14) 55%, rgba(255, 255, 255, .26)), rgba(255, 138, 115, .38);
+    border-color: rgba(255, 255, 255, .72);
+    color: #A93A22;
   }
 
   .recall-answer {
@@ -767,22 +767,19 @@
 .star-full::before {
   content: '★';
   color: #ffd966;
-  -webkit-text-stroke: 1px #1e2d42;
 }
 
 .star-empty::before {
   content: '☆';
-  color: #d7e6f5;
-  -webkit-text-stroke: 1px #1e2d42;
+  color: #a9dcff;
 }
 
 .star-half::before {
   content: '★';
-  background: linear-gradient(90deg, #ffd966 50%, #d7e6f5 50%);
+  background: linear-gradient(90deg, #ffd966 50%, #a9dcff 50%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 1px #1e2d42;
 }
 
 /* Old browsers and reduced-transparency users get clear, opaque surfaces. */
