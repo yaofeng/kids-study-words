@@ -190,18 +190,23 @@
   .notebook-card {
     @apply relative grid items-center gap-x-3 gap-y-1;
     grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "line foot"
+      "meta foot";
   }
 
   .notebook-line {
     @apply flex min-w-0 flex-wrap items-center gap-2;
+    grid-area: line;
   }
 
   .notebook-card .notebook-meta {
-    @apply col-span-2;
+    grid-area: meta;
   }
 
   .notebook-card .notebook-foot {
-    @apply col-start-2 row-start-1;
+    @apply self-center;
+    grid-area: foot;
   }
 
   .notebook-card .notebook-settings {

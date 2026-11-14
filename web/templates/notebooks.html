@@ -23,7 +23,7 @@
       <h2 class="notebook-name">{{.Name}}</h2>
       {{if .IsDefault}}<span class="badge badge-default">默认</span>{{end}}
     </div>
-    <p class="notebook-meta">{{.WordCount}} 个单词 · 更新于 {{FormatDate .UpdatedAt}}</p>
+    <p class="notebook-meta">{{.WordCount}} 个单词 · <span class="hidden sm:inline">更新于 </span>{{FormatDate .UpdatedAt}}</p>
 
     <div class="notebook-foot">
       <a class="btn" href="/notebooks/{{.ID}}">浏览</a>
