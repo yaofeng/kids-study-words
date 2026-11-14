@@ -409,7 +409,7 @@
   }
 
   .recall-select {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+    @apply flex flex-col gap-4;
   }
 
   .recall-select-card {
@@ -514,7 +514,20 @@
   }
 
   .filter-row {
-    @apply mb-5 flex flex-col gap-3 sm:flex-row sm:items-end;
+    @apply mb-5 flex flex-row items-center gap-3;
+  }
+
+  .filter-row .field {
+    @apply min-w-0 flex-1 flex-row items-center gap-3;
+  }
+
+  .filter-row .field-label {
+    @apply whitespace-nowrap;
+  }
+
+  .filter-row .select {
+    @apply min-w-0 flex-1;
+    max-width: none;
   }
 
   .records-day {
@@ -531,6 +544,10 @@
 
   .record-row {
     @apply flex flex-wrap items-center gap-2 rounded-2xl border-2 border-ink bg-paper px-4 py-2;
+  }
+
+  .record-row .stars {
+    @apply ml-auto;
   }
 
   .record-time {
