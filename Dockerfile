@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # The go.mod directive needs a 1.26 toolchain (the spec's "Go 1.24+" is a floor).
-ARG VERSION=dev
+ARG VERSION=0.9.0
 
 FROM golang:1.26-alpine AS build
 ARG VERSION
