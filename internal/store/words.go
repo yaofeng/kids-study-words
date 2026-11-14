@@ -97,6 +97,47 @@ func (s *Store) ListWords(ctx context.Context, notebookID int64, sort string) ([
 	return out, rows.Err()
 }
 
+// WordNotebooks maps lowercased words to the names of the user's notebooks
+// that contain them. Notebooks are ordered default first, then by name.
+// Words with no match are absent from the map.
+func (s *Store) WordNotebooks(ctx context.Context, userID int64, words []string) (map[string][]string, error) {
+	out := make(map[string][]string)
+	seen := make(map[string]bool, len(words))
+	args := make([]any, 0, len(words)+1)
+	args = append(args, userID)
+	for _, raw := range words {
+		w := strings.ToLower(strings.TrimSpace(raw))
+		if w == "" || seen[w] {
+			continue
+		}
+		seen[w] = true
+		args = append(args, w)
+	}
+	if len(args) == 1 {
+		return out, nil
+	}
+
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(args)-1), ",")
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT LOWER(w.word), n.name
+		FROM words w
+		JOIN notebooks n ON n.id = w.notebook_id
+		WHERE n.user_id = ? AND LOWER(w.word) IN (`+placeholders+`)
+		ORDER BY n.is_default DESC, n.name COLLATE NOCASE ASC, n.id ASC`, args...)
+	if err != nil {
+		return nil, fmt.Errorf("find word notebooks: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var word, name string
+		if err := rows.Scan(&word, &name); err != nil {
+			return nil, fmt.Errorf("scan word notebook: %w", err)
+		}
+		out[word] = append(out[word], name)
+	}
+	return out, rows.Err()
+}
+
 // WordByID loads one word scoped to its notebook.
 func (s *Store) WordByID(ctx context.Context, notebookID, id int64) (Word, error) {
 	row := s.db.QueryRowContext(ctx,

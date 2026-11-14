@@ -106,3 +106,45 @@ func TestNotebookOwnershipAndCounts(t *testing.T) {
 		t.Fatalf("renamed=%+v err=%v", renamed, err)
 	}
 }
+
+func TestWordNotebooksListsMembership(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, first, err := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := st.CreateNotebook(ctx, u.ID, "动物")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, nb := range []Notebook{first, second} {
+		if _, err := st.AddWord(ctx, nb.ID, Word{Word: "apple", Translation: "n. 苹果"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := st.AddWord(ctx, first.ID, Word{Word: "pear", Translation: "n. 梨"}); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := st.WordNotebooks(ctx, u.ID, []string{"APPLE", "pear", "missing"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if names := got["apple"]; len(names) != 2 || names[0] != "默认生词本" || names[1] != "动物" {
+		t.Fatalf("apple notebooks=%v", names)
+	}
+	if names := got["pear"]; len(names) != 1 || names[0] != "默认生词本" {
+		t.Fatalf("pear notebooks=%v", names)
+	}
+	if _, ok := got["missing"]; ok {
+		t.Fatalf("missing should not be present: %v", got)
+	}
+	foreign, err := st.WordNotebooks(ctx, u.ID+1, []string{"apple"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(foreign) != 0 {
+		t.Fatalf("foreign user must see nothing: %v", foreign)
+	}
+}

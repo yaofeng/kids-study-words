@@ -17,6 +17,29 @@ document.addEventListener('htmx:responseError', (event) => {
   }
 });
 
+// Tick the round timer shown on recall cards.
+function formatElapsed(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? h + ':' + mm + ':' + ss : mm + ':' + ss;
+}
+
+function updateRoundTimers() {
+  const now = Math.floor(Date.now() / 1000);
+  document.querySelectorAll('[data-round-timer]').forEach((el) => {
+    const start = Number(el.dataset.start);
+    if (!Number.isFinite(start) || start <= 0) return;
+    el.textContent = formatElapsed(Math.max(0, now - start));
+  });
+}
+
+updateRoundTimers();
+setInterval(updateRoundTimers, 1000);
+document.body.addEventListener('htmx:afterSwap', updateRoundTimers);
+
 // Add or remove example sentence rows, keeping field names sequential.
 function renumberExamples(list) {
   Array.from(list.querySelectorAll('.example-row')).forEach((row, index) => {

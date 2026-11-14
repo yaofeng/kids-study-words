@@ -3,6 +3,7 @@ package recall
 import (
 	"errors"
 	"testing"
+	"time"
 )
 
 func TestManagerDoubleAnswerRejected(t *testing.T) {
@@ -60,5 +61,21 @@ func TestManagerUndoAndLastWord(t *testing.T) {
 	m.Reset(1)
 	if st := m.Snapshot(1); st.NotebookID != 0 || st.Known != 0 {
 		t.Fatalf("state=%+v", st)
+	}
+}
+
+func TestManagerRoundStartedAt(t *testing.T) {
+	m := NewManager()
+	st := m.Begin(1, 10)
+	if st.StartedAt.IsZero() {
+		t.Fatal("new round should record its start time")
+	}
+	start := st.StartedAt
+	time.Sleep(2 * time.Millisecond)
+	if again := m.Begin(1, 10); !again.StartedAt.Equal(start) {
+		t.Fatalf("re-entering the same round restarted the timer: %v != %v", again.StartedAt, start)
+	}
+	if switched := m.Begin(1, 11); !switched.StartedAt.After(start) {
+		t.Fatalf("switching notebooks should start a new round: %v", switched.StartedAt)
 	}
 }

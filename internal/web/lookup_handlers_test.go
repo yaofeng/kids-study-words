@@ -114,3 +114,43 @@ func TestAddWordRejectsOffsiteNext(t *testing.T) {
 		t.Fatalf("location=%q", loc)
 	}
 }
+
+func TestLookupShowsNotebookMembership(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
+	tc.srv.dict = fakeDict{entry: dict.Entry{Word: "apple", Translation: "n. 苹果", Tag: "zk"}}
+	body := tc.get("/lookup/results?mode=en&q=app").Body.String()
+	if !strings.Contains(body, "badge-notebook") || !strings.Contains(body, "默认生词本") {
+		t.Fatalf("notebook badge missing: %s", body)
+	}
+	if !strings.Contains(body, "中考") {
+		t.Fatalf("exam badge should still render: %s", body)
+	}
+}
+
+func TestLookupOmitsNotebookMembershipForUnsavedWord(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	tc.srv.dict = fakeDict{entry: dict.Entry{Word: "pear", Translation: "n. 梨"}}
+	body := tc.get("/lookup/results?mode=en&q=pe").Body.String()
+	if strings.Contains(body, "badge-notebook") {
+		t.Fatalf("unsaved word should not show a notebook badge: %s", body)
+	}
+}
+
+func TestAddWordFlashNamesWordAndNotebook(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	tc.srv.dict = fakeDict{entry: dict.Entry{Word: "apple", Translation: "n. 苹果"}}
+	resp := tc.postForm("/words", url.Values{
+		"notebook_id": {fmt.Sprint(tc.notebook.ID)},
+		"word":        {"apple"},
+		"csrf_token":  {tc.csrf},
+		"next":        {"/lookup?mode=en&q=apple"},
+	})
+	if resp.Code != http.StatusSeeOther {
+		t.Fatalf("code=%d", resp.Code)
+	}
+	body := tc.get("/lookup?mode=en&q=apple").Body.String()
+	if !strings.Contains(body, "「apple」已加入《默认生词本》。") {
+		t.Fatalf("flash should name the word and notebook: %s", body)
+	}
+}

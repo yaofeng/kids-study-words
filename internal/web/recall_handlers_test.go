@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -151,5 +152,35 @@ func TestRecallHidesPhoneticUntilAnswer(t *testing.T) {
 	})
 	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), "/ˈæpl/") {
 		t.Fatalf("phonetic should appear after the answer: code=%d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRecallShowsTimerAndRoundCount(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	w := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
+	body := tc.get("/recall/" + fmt.Sprint(tc.notebook.ID)).Body.String()
+	if !strings.Contains(body, "data-round-timer") || !strings.Contains(body, "认识 0 / 0") {
+		t.Fatalf("timer or count missing: %s", body)
+	}
+	m := regexp.MustCompile(`data-start="(\d+)"`).FindStringSubmatch(body)
+	if m == nil {
+		t.Fatalf("timer start missing: %s", body)
+	}
+	start := m[1]
+
+	resp := tc.postForm(fmt.Sprintf("/recall/%d/answer", tc.notebook.ID), url.Values{
+		"word_id": {fmt.Sprint(w.ID)}, "known": {"1"}, "csrf_token": {tc.csrf},
+	})
+	after := resp.Body.String()
+	if !strings.Contains(after, "认识 1 / 1") {
+		t.Fatalf("answer should count 1/1: %s", after)
+	}
+	if !strings.Contains(after, `data-start="`+start+`"`) {
+		t.Fatalf("timer restarted after answering: %s", after)
+	}
+
+	next := tc.postForm(fmt.Sprintf("/recall/%d/next", tc.notebook.ID), url.Values{})
+	if !strings.Contains(next.Body.String(), `data-start="`+start+`"`) {
+		t.Fatalf("timer restarted on next card: %s", next.Body.String())
 	}
 }

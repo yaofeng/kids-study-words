@@ -3,6 +3,7 @@ package recall
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 // Errors reported by Manager.
@@ -16,10 +17,16 @@ type State struct {
 	NotebookID     int64
 	Known          int
 	Unknown        int
+	StartedAt      time.Time
 	LastWordID     int64
 	AnsweredWordID int64
 
 	lastKnown bool
+}
+
+// Total is the number of cards answered this round.
+func (s State) Total() int {
+	return s.Known + s.Unknown
 }
 
 // Manager keeps in-memory round state; persistence lives in recall_logs.
@@ -46,7 +53,7 @@ func (m *Manager) Begin(userID, notebookID int64) State {
 	defer m.mu.Unlock()
 	s := m.states[userID]
 	if s == nil || s.NotebookID != notebookID {
-		s = &State{NotebookID: notebookID}
+		s = &State{NotebookID: notebookID, StartedAt: time.Now()}
 		m.states[userID] = s
 	}
 	return *s
@@ -65,7 +72,7 @@ func (m *Manager) SetLastWord(userID, wordID int64) {
 	defer m.mu.Unlock()
 	s := m.states[userID]
 	if s == nil {
-		s = &State{}
+		s = &State{StartedAt: time.Now()}
 		m.states[userID] = s
 	}
 	s.LastWordID = wordID

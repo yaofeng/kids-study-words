@@ -50,8 +50,11 @@
       </ul>
       {{end}}
       {{if .Definition}}<p class="definition">{{.Definition}}</p>{{end}}
-      {{if Tags .Tag}}
-      <p class="tags">{{range Tags .Tag}}<span class="badge">{{.}}</span>{{end}}</p>
+      {{if or (Tags .Tag) .Notebooks}}
+      <p class="tags">
+        {{range Tags .Tag}}<span class="badge">{{.}}</span>{{end}}
+        {{range .Notebooks}}<span class="badge badge-notebook"><span aria-hidden="true">📒</span> {{.}}</span>{{end}}
+      </p>
       {{end}}
     </div>
     <div class="lookup-actions">
@@ -98,9 +101,16 @@
 {{end}}
 {{end}}
 
+{{define "recall_progress"}}
+<div class="recall-progress">
+  <span>⏱ <span class="recall-timer" data-round-timer data-start="{{.State.StartedAt.Unix}}">00:00</span></span>
+  <span>认识 {{.State.Known}} / {{.State.Total}}</span>
+</div>
+{{end}}
+
 {{define "recall_card"}}
 <article class="recall-card" id="recall-card">
-  <p class="recall-progress">本次认识 {{.State.Known}} · 不认识 {{.State.Unknown}}</p>
+  {{template "recall_progress" .}}
   {{if .Word}}
   <div class="recall-word" lang="en">{{.Word.Word}}</div>
   <div class="recall-actions">
@@ -122,7 +132,7 @@
 
 {{define "recall_answer"}}
 <article class="recall-card recall-answer" id="recall-card">
-  <p class="recall-progress">本次认识 {{.State.Known}} · 不认识 {{.State.Unknown}}</p>
+  {{template "recall_progress" .}}
   <div class="recall-word" lang="en">{{.Word.Word}}</div>
   {{if .Word.Phonetic}}<p class="word-phonetic">{{.Word.Phonetic}}</p>{{end}}
   <p class="recall-result {{if .Log.Known}}is-known{{else}}is-unknown{{end}}">

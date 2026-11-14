@@ -20,12 +20,18 @@ type Dictionary interface {
 	Examples(ctx context.Context, word, exchange string, limit int) ([]dict.Sentence, error)
 }
 
+// lookupResult is one dictionary entry plus the notebooks that already hold it.
+type lookupResult struct {
+	dict.Entry
+	Notebooks []string
+}
+
 // lookupData feeds the lookup page and its results fragment.
 type lookupData struct {
 	Base
 	Mode    string
 	Query   string
-	Results []dict.Entry
+	Results []lookupResult
 	Hint    string
 }
 
@@ -52,6 +58,27 @@ func (s *Server) searchDict(ctx context.Context, mode, q string) ([]dict.Entry, 
 	return s.dict.SearchEnglish(ctx, q, 20)
 }
 
+// decorateResults attaches the user's notebooks that already contain each
+// dictionary entry.
+func (s *Server) decorateResults(ctx context.Context, userID int64, entries []dict.Entry) ([]lookupResult, error) {
+	words := make([]string, len(entries))
+	for i, entry := range entries {
+		words[i] = entry.Word
+	}
+	owners, err := s.store.WordNotebooks(ctx, userID, words)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]lookupResult, len(entries))
+	for i, entry := range entries {
+		out[i] = lookupResult{
+			Entry:     entry,
+			Notebooks: owners[strings.ToLower(strings.TrimSpace(entry.Word))],
+		}
+	}
+	return out, nil
+}
+
 func (s *Server) handleLookupPage(w http.ResponseWriter, r *http.Request) {
 	mode := normalizeMode(r.URL.Query().Get("mode"))
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
@@ -67,7 +94,11 @@ func (s *Server) handleLookupPage(w http.ResponseWriter, r *http.Request) {
 			s.fail(w, r, err)
 			return
 		}
-		data.Results = results
+		data.Results, err = s.decorateResults(r.Context(), currentUser(r).ID, results)
+		if err != nil {
+			s.fail(w, r, err)
+			return
+		}
 	}
 	if err := s.renderer.page(w, http.StatusOK, "lookup", data); err != nil {
 		s.fail(w, r, err)
@@ -87,7 +118,12 @@ func (s *Server) handleLookupResults(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	data := lookupData{Base: base, Mode: mode, Query: q, Results: results}
+	decorated, err := s.decorateResults(r.Context(), currentUser(r).ID, results)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	data := lookupData{Base: base, Mode: mode, Query: q, Results: decorated}
 	_ = s.renderer.fragment(w, http.StatusOK, "lookup_results", data)
 }
 
@@ -219,7 +255,7 @@ func (s *Server) handleAddWord(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	default:
-		setFlash(w, fmt.Sprintf("已加入《%s》。", nb.Name))
+		setFlash(w, fmt.Sprintf("「%s」已加入《%s》。", entry.Word, nb.Name))
 	}
 	http.Redirect(w, r, next, http.StatusSeeOther)
 }
