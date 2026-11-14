@@ -153,6 +153,16 @@ Tailwind 配置里把 `teal` 系列改名 `blue` 系列、`teal-dark` 改名 `bl
 - `.version` 从 `0.9.2` 改为 `1.0.0`；`version.go`、代码和静态资源都不写版本号。
 - `version_test.go` 会扫描除少数目录外的全部文件，文档里出现版本号会误报。测试改为跳过 `docs/` 目录：文档可以记录发布号，代码和资源仍不得硬编码。
 
+### 5.9 图标
+
+导航、生词本徽章、计时器和设置按钮不再使用彩色 emoji，改为内嵌 SVG，和玻璃系统同一套语言：
+
+- 24×24 画布、2px 圆头描边，颜色用 `currentColor`，随导航状态在 `muted` 与 `blue-text` 之间切换。
+- 镜片、书页、日历面用当前色 8–16% 的淡填充；书签、日历圆点、卡片小星星用阳光黄 `#FFD966` 作卡通点缀。
+- 六个模板：`icon_search`、`icon_book`、`icon_cards`、`icon_calendar`、`icon_settings`、`icon_timer`；导航 24px，徽章 15px，计时器 16px。
+- 全部内嵌在 `partials.html`，不引外部图标文件或 CDN；SVG 标 `aria-hidden="true" focusable="false"`，语义由可见文字或 `aria-label` 提供。
+- `TestIconsAreInlineSVG` 守住三件事：模板里不再出现 emoji、六个图标模板存在、导航恰好五个图标。
+
 ## 6. 留给实现者的判断
 
 - 每处玻璃的具体透明度、渐变停靠点和高光强度，按本轮选定的「A · 糖果玻璃 / 1 · 晴空蓝」模拟稿微调。没有外部 Figma；模拟稿的 CSS 参数（`blur(18px) saturate(180%)`、白色高光内阴影、糖果色背景块）就是参考。
