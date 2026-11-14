@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/yaofeng/kids-study-words/internal/auth"
 	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
@@ -110,7 +111,34 @@ func (s *Server) handleDeleteNotebook(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	err := s.store.DeleteNotebook(r.Context(), currentUser(r).ID, id)
+	userID := currentUser(r).ID
+	if _, err := s.store.NotebookByID(r.Context(), userID, id); errors.Is(err, store.ErrNotFound) {
+		s.renderError(w, r, http.StatusNotFound, "生词本不存在。")
+		return
+	} else if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		s.renderError(w, r, http.StatusBadRequest, "表单格式不对。")
+		return
+	}
+	password := r.PostForm.Get("password")
+	if password == "" {
+		s.renderNotebooksError(w, r, "请输入当前密码后再删除。")
+		return
+	}
+	user, err := s.store.UserByID(r.Context(), userID)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if !auth.CheckPassword(user.PasswordHash, password) {
+		s.renderNotebooksError(w, r, "密码不对，生词本没有删除。")
+		return
+	}
+
+	err = s.store.DeleteNotebook(r.Context(), userID, id)
 	switch {
 	case errors.Is(err, store.ErrLastNotebook):
 		s.renderNotebooksError(w, r, "这是最后一个生词本，不能删除。")

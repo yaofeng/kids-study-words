@@ -24,16 +24,15 @@
   {{range .Words}}
   <li class="card word-card">
     <div class="word-main">
-      <div class="word-title">
+      <div class="word-line">
         <span class="word-en">{{.Word}}</span>
         {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
-        {{template "stars" .Proficiency}}
       </div>
       <p class="word-translation">{{FirstLine .Translation}}</p>
       <p class="word-meta">
-        加入于 {{FormatDate .AddedAt}}
-        {{if .LastReviewedAt}} · 上次回忆 {{FormatDate .LastReviewedAt}}{{else}} · 还没回忆过{{end}}
-        · 共回忆 {{.ReviewCount}} 次
+        <span>加入于 {{FormatDate .AddedAt}}</span>
+        <span>{{template "stars" .Proficiency}}</span>
+        <span>回忆 {{.ReviewCount}} 次</span>
       </p>
     </div>
     <div class="word-actions">
