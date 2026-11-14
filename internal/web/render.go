@@ -28,6 +28,7 @@ type Base struct {
 	Flash           string
 	Error           string
 	Version         string
+	AssetVersion    string
 }
 
 // StarState is one of the five star positions.
@@ -158,10 +159,11 @@ func (s *Server) fail(w http.ResponseWriter, r *http.Request, err error) {
 // renderError shows the friendly error page.
 func (s *Server) renderError(w http.ResponseWriter, r *http.Request, status int, msg string) {
 	data := Base{
-		Title:   http.StatusText(status),
-		CSRF:    csrfFrom(r),
-		Error:   msg,
-		Version: s.version,
+		Title:        http.StatusText(status),
+		CSRF:         csrfFrom(r),
+		Error:        msg,
+		Version:      s.version,
+		AssetVersion: s.assetVersion,
 	}
 	data.User = currentUser(r)
 	if err := s.renderer.page(w, status, "error", data); err != nil {

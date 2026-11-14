@@ -2,6 +2,8 @@ package web
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"html/template"
@@ -47,6 +49,7 @@ type Server struct {
 	now          func() time.Time
 	limiter      *auth.LoginLimiter
 	recall       *recall.Manager
+	assetVersion string
 	renderer     *renderer
 	handler      http.Handler
 }
@@ -85,6 +88,7 @@ func New(opts Options) (*Server, error) {
 		now:          opts.Now,
 		limiter:      auth.NewLoginLimiter(5, time.Minute, opts.Now),
 		recall:       recall.NewManager(),
+		assetVersion: staticVersion(staticFS),
 	}
 	s.renderer = newRenderer(tmplFS, s.templateFuncs())
 
@@ -102,6 +106,21 @@ func New(opts Options) (*Server, error) {
 
 // Handler returns the fully wrapped HTTP handler.
 func (s *Server) Handler() http.Handler { return s.handler }
+
+// staticVersion fingerprints the cacheable front-end assets so a new binary
+// invalidates browsers' cached HTML/CSS/JS together.
+func staticVersion(fsys fs.FS) string {
+	h := sha256.New()
+	for _, name := range []string{"app.css", "app.js", "htmx.min.js"} {
+		b, err := fs.ReadFile(fsys, name)
+		if err != nil {
+			slog.Warn("fingerprint static asset", "file", name, "err", err)
+			continue
+		}
+		h.Write(b)
+	}
+	return hex.EncodeToString(h.Sum(nil))[:12]
+}
 
 func (s *Server) templateFuncs() template.FuncMap {
 	return template.FuncMap{
@@ -204,10 +223,11 @@ func (s *Server) pageData(w http.ResponseWriter, r *http.Request, title, active 
 // baseData assembles the data every page template needs.
 func (s *Server) baseData(w http.ResponseWriter, r *http.Request) (Base, error) {
 	data := Base{
-		User:    currentUser(r),
-		CSRF:    csrfFrom(r),
-		Flash:   popFlash(w, r),
-		Version: s.version,
+		User:         currentUser(r),
+		CSRF:         csrfFrom(r),
+		Flash:        popFlash(w, r),
+		Version:      s.version,
+		AssetVersion: s.assetVersion,
 	}
 	if data.User.ID == 0 {
 		return data, nil

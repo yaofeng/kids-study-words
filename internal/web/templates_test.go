@@ -1,6 +1,9 @@
 package web
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestStarsLevels(t *testing.T) {
 	if got := Stars(1); got[0].Fill != "half" || got[1].Fill != "empty" {
@@ -29,5 +32,15 @@ func TestStarsClampOutOfRange(t *testing.T) {
 	}
 	if got := Stars(99); got[4].Fill != "full" {
 		t.Fatalf("%+v", got)
+	}
+}
+
+func TestLayoutVersionsStaticAssets(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	body := tc.get("/lookup").Body.String()
+	for _, asset := range []string{"app.css?v=", "app.js?v=", "htmx.min.js?v="} {
+		if !strings.Contains(body, asset) {
+			t.Fatalf("asset %q should carry a content version: %s", asset, body)
+		}
 	}
 }
