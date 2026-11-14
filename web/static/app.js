@@ -40,6 +40,17 @@ updateRoundTimers();
 setInterval(updateRoundTimers, 1000);
 document.body.addEventListener('htmx:afterSwap', updateRoundTimers);
 
+// Toggle the settings panel on a notebook card.
+document.addEventListener('click', (event) => {
+  const toggle = event.target.closest('[data-settings-toggle]');
+  if (!toggle) return;
+  const panel = document.getElementById(toggle.getAttribute('aria-controls'));
+  if (!panel) return;
+  const opening = panel.hasAttribute('hidden');
+  panel.toggleAttribute('hidden', !opening);
+  toggle.setAttribute('aria-expanded', String(opening));
+});
+
 // Add or remove example sentence rows, keeping field names sequential.
 function renumberExamples(list) {
   Array.from(list.querySelectorAll('.example-row')).forEach((row, index) => {

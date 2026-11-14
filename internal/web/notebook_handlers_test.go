@@ -157,3 +157,24 @@ func TestNotebookWordShowsThreeLines(t *testing.T) {
 		t.Fatalf("expected word → chinese → meta order: %d %d %d %d %d", wordAt, zhAt, metaAt, starsAt, countAt)
 	}
 }
+
+func TestNotebookCardUsesSettingsMenu(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	body := tc.get("/notebooks").Body.String()
+	for _, want := range []string{
+		"data-settings-toggle",
+		`aria-label="生词本设置"`,
+		"notebook-settings",
+		"浏览",
+		"重命名",
+		"删除",
+		`name="password"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("missing %q in notebook card: %s", want, body)
+		}
+	}
+	if strings.Contains(body, "notebook-actions") {
+		t.Fatalf("old action row should be gone: %s", body)
+	}
+}

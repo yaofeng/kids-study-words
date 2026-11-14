@@ -203,8 +203,16 @@
     @apply text-sm text-muted;
   }
 
-  .notebook-actions {
-    @apply flex flex-wrap items-center gap-2 border-t-2 border-dashed border-ink/20 pt-3;
+  .notebook-foot {
+    @apply flex items-center justify-end gap-2 border-t-2 border-dashed border-ink/20 pt-3;
+  }
+
+  .btn-icon {
+    @apply w-11 px-0 text-lg;
+  }
+
+  .notebook-settings > * + * {
+    @apply mt-3;
   }
 
   .rename-form {
@@ -215,24 +223,8 @@
     @apply min-w-0 flex-1;
   }
 
-  .delete-details {
-    @apply shrink-0;
-  }
-
-  .delete-details > summary {
-    @apply list-none cursor-pointer;
-  }
-
-  .delete-details > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .delete-details[open] {
-    @apply basis-full;
-  }
-
   .delete-form {
-    @apply mt-3 flex flex-col gap-2 rounded-2xl border-2 border-dashed border-ink/20 p-3 sm:flex-row sm:items-end;
+    @apply flex flex-col gap-2 border-t-2 border-dashed border-ink/20 pt-3 sm:flex-row sm:items-end;
   }
 
   .delete-form .field {
