@@ -33,9 +33,12 @@
 
 @layer base {
   body {
-    background-image: radial-gradient(circle at 12% 8%, rgba(255, 217, 102, 0.18) 0 12px, transparent 13px),
-      radial-gradient(circle at 88% 22%, rgba(185, 167, 230, 0.16) 0 16px, transparent 17px);
-    background-repeat: no-repeat;
+    background-color: #F2FAFF;
+    background-image:
+      radial-gradient(420px 320px at 8% 4%, rgba(120, 196, 255, 0.32), transparent 70%),
+      radial-gradient(380px 300px at 96% 18%, rgba(255, 217, 102, 0.20), transparent 72%),
+      radial-gradient(460px 360px at 86% 96%, rgba(102, 217, 199, 0.22), transparent 72%),
+      linear-gradient(170deg, #F2FAFF 0%, #E2F3FF 52%, #EAF2FF 100%);
   }
 
   a:focus-visible,
@@ -44,7 +47,7 @@
   select:focus-visible,
   textarea:focus-visible,
   summary:focus-visible {
-    outline: 3px solid #237a72;
+    outline: 3px solid #1F73D6;
     outline-offset: 2px;
   }
 }
@@ -64,7 +67,7 @@
   }
 
   .btn-primary {
-    @apply bg-teal text-white;
+    @apply bg-blue-deep text-white;
   }
 
   .btn-danger {
@@ -76,7 +79,7 @@
   }
 
   .input {
-    @apply min-h-[44px] w-full rounded-2xl border-2 border-ink bg-paper px-4 py-2 text-base outline-none focus:border-teal-dark focus:ring-2 focus:ring-teal/40;
+    @apply min-h-[44px] w-full rounded-2xl border-2 border-ink bg-paper px-4 py-2 text-base outline-none focus:border-blue-deep focus:ring-2 focus:ring-blue/40;
   }
 
   .field {
@@ -112,7 +115,7 @@
   }
 
   .choice input {
-    @apply mt-1 h-5 w-5 shrink-0 accent-teal;
+    @apply mt-1 h-5 w-5 shrink-0 accent-blue;
   }
 
   .muted-text {
@@ -120,11 +123,11 @@
   }
 
   .settings-details {
-    @apply rounded-2xl border-2 border-line/30 px-4 py-3;
+    @apply rounded-2xl border-2 border-ink/15 px-4 py-3;
   }
 
   .settings-summary {
-    @apply cursor-pointer font-bold text-teal-dark;
+    @apply cursor-pointer font-bold text-blue-text;
   }
 
   .settings-form {
@@ -140,7 +143,7 @@
   }
 
   .alert-success {
-    @apply mb-4 border-teal-dark bg-teal/15 text-teal-dark;
+    @apply mb-4 border-blue-deep bg-blue/15 text-blue-text;
   }
 
   .auth-card {
@@ -164,7 +167,7 @@
   }
 
   .link {
-    @apply font-bold text-teal-dark underline underline-offset-4;
+    @apply font-bold text-blue-text underline underline-offset-4;
   }
 
   .page-head {
@@ -270,7 +273,7 @@
   }
 
   .back-link {
-    @apply text-sm font-bold text-muted hover:text-teal-dark;
+    @apply text-sm font-bold text-muted hover:text-blue-text;
   }
 
   .detail-head {
@@ -294,7 +297,7 @@
   }
 
   .tab.is-active {
-    @apply bg-teal text-white;
+    @apply bg-blue-deep text-white;
   }
 
   .word-list {
@@ -481,7 +484,7 @@
   }
 
   .btn-known {
-    @apply bg-teal text-white;
+    @apply bg-blue-deep text-white;
   }
 
   .btn-unknown {
@@ -501,7 +504,7 @@
   }
 
   .recall-result.is-known {
-    @apply bg-teal/20 text-teal-dark;
+    @apply bg-blue/20 text-blue-text;
   }
 
   .recall-result.is-unknown {
@@ -534,7 +537,7 @@
   }
 
   .stat-number.is-known {
-    @apply text-teal-dark;
+    @apply text-blue-text;
   }
 
   .stat-number.is-unknown {
@@ -599,7 +602,7 @@
   }
 
   .badge.is-known {
-    @apply bg-teal/25 text-teal-dark;
+    @apply bg-blue/25 text-blue-text;
   }
 
   .badge.is-unknown {
@@ -620,7 +623,7 @@
   }
 
   .nav-link.is-active {
-    @apply text-teal-dark md:border-2 md:border-ink md:bg-teal/15 md:shadow-sticker;
+    @apply text-blue-text md:border-2 md:border-ink md:bg-blue/15 md:shadow-sticker;
   }
 
   .nav-icon {
@@ -644,20 +647,20 @@
 .star-full::before {
   content: '★';
   color: #ffd966;
-  -webkit-text-stroke: 1px #3b3a36;
+  -webkit-text-stroke: 1px #1e2d42;
 }
 
 .star-empty::before {
   content: '☆';
-  color: #e3dccd;
-  -webkit-text-stroke: 1px #3b3a36;
+  color: #d7e6f5;
+  -webkit-text-stroke: 1px #1e2d42;
 }
 
 .star-half::before {
   content: '★';
-  background: linear-gradient(90deg, #ffd966 50%, #e3dccd 50%);
+  background: linear-gradient(90deg, #ffd966 50%, #d7e6f5 50%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 1px #3b3a36;
+  -webkit-text-stroke: 1px #1e2d42;
 }
