@@ -50,3 +50,25 @@ func TestGlassContract(t *testing.T) {
 		}
 	}
 }
+
+func TestNavHitAreasAndSafeArea(t *testing.T) {
+	data, err := os.ReadFile("static/input.css")
+	if err != nil {
+		t.Fatalf("read input.css: %v", err)
+	}
+	css := string(data)
+
+	for _, want := range []string{
+		"env(safe-area-inset-bottom)",
+		"pointer: coarse",
+		"min-height: 44px",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("input.css is missing %q", want)
+		}
+	}
+
+	if !strings.Contains(ruleBlock(css, ".app-nav"), "backdrop-filter") {
+		t.Error(".app-nav should use backdrop-filter")
+	}
+}
