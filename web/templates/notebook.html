@@ -23,23 +23,24 @@
 <ul class="word-list">
   {{range .Words}}
   <li class="card word-card">
-    <div class="word-main">
-      <div class="word-line">
-        <span class="word-en">{{.Word}}</span>
-        {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
+    <div class="word-swipe">
+      <div class="word-content">
+        <div class="word-main">
+          <div class="word-line">
+            <span class="word-en">{{.Word}}</span>
+            {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
+          </div>
+          <p class="word-translation">{{FirstLine .Translation}}</p>
+        </div>
+        <div class="word-side">
+          <span>加入于 {{FormatDate .AddedAt}}</span>
+          <span>{{template "stars" .Proficiency}}</span>
+          <span>回忆 {{.ReviewCount}} 次</span>
+        </div>
       </div>
-      <p class="word-translation">{{FirstLine .Translation}}</p>
-      <p class="word-meta">
-        <span>加入于 {{FormatDate .AddedAt}}</span>
-        <span>{{template "stars" .Proficiency}}</span>
-        <span>回忆 {{.ReviewCount}} 次</span>
-      </p>
-    </div>
-    <div class="word-actions">
-      <a class="btn btn-small" href="/notebooks/{{$.Notebook.ID}}/words/{{.ID}}/edit">编辑</a>
-      <form method="post" action="/notebooks/{{$.Notebook.ID}}/words/{{.ID}}/delete">
+      <form method="post" action="/notebooks/{{$.Notebook.ID}}/words/{{.ID}}/delete" class="word-delete">
         {{template "csrf" $}}
-        <button class="btn btn-small btn-danger" type="submit" data-confirm="删除单词「{{.Word}}」？">删除</button>
+        <button type="submit" data-confirm="删除单词「{{.Word}}」？">删除</button>
       </form>
     </div>
   </li>

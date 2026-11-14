@@ -280,15 +280,37 @@
   }
 
   .word-card {
-    @apply flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between;
+    @apply overflow-hidden p-0;
+  }
+
+  .word-swipe {
+    @apply flex overflow-x-auto;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+  }
+
+  .word-swipe::-webkit-scrollbar {
+    display: none;
+  }
+
+  .word-content {
+    @apply flex w-full shrink-0 snap-start items-start justify-between gap-3 p-4;
+  }
+
+  .word-side {
+    @apply flex shrink-0 flex-col items-end gap-1 whitespace-nowrap text-xs text-muted;
+  }
+
+  .word-delete {
+    @apply flex w-24 shrink-0 snap-end;
+  }
+
+  .word-delete button {
+    @apply w-full bg-coral px-2 font-bold;
   }
 
   .word-main {
     @apply flex min-w-0 flex-col gap-1;
-  }
-
-  .word-title {
-    @apply flex flex-wrap items-center gap-2;
   }
 
   .word-en {
@@ -305,14 +327,6 @@
 
   .word-line {
     @apply flex flex-wrap items-center gap-2;
-  }
-
-  .word-meta {
-    @apply flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted;
-  }
-
-  .word-actions {
-    @apply flex shrink-0 items-center gap-2;
   }
 
   .textarea {

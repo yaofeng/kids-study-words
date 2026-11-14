@@ -178,3 +178,22 @@ func TestNotebookCardUsesSettingsMenu(t *testing.T) {
 		t.Fatalf("old action row should be gone: %s", body)
 	}
 }
+
+func TestNotebookWordCardUsesSwipeLayout(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	w := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
+	body := tc.get(fmt.Sprintf("/notebooks/%d", tc.notebook.ID)).Body.String()
+	for _, want := range []string{
+		"word-swipe",
+		"word-content",
+		"word-side",
+		fmt.Sprintf(`action="/notebooks/%d/words/%d/delete"`, tc.notebook.ID, w.ID),
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("missing %q in word card: %s", want, body)
+		}
+	}
+	if strings.Contains(body, "/edit") {
+		t.Fatalf("edit entry should be removed from the word card: %s", body)
+	}
+}
