@@ -32,6 +32,13 @@
 }
 
 @layer base {
+  :root {
+    --glass-fill: linear-gradient(145deg, rgba(255,255,255,.62), rgba(255,255,255,.18) 46%, rgba(255,255,255,.34)), rgba(255,255,255,.20);
+    --glass-border: rgba(255,255,255,.75);
+    --glass-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 1px 0 0 rgba(255,255,255,.50), inset 0 -1px 0 rgba(255,255,255,.32), 0 12px 28px rgba(40,80,140,.16);
+    --glass-blur: blur(18px) saturate(180%);
+  }
+
   body {
     background-color: #F2FAFF;
     background-image:
@@ -59,19 +66,29 @@
 
 @layer components {
   .card {
-    @apply rounded-blob border-2 border-ink bg-paper p-5 shadow-sticker;
+    @apply rounded-blob p-5;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border-2 border-ink bg-paper px-5 py-2 font-bold text-ink shadow-sticker transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none whitespace-nowrap;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-5 py-2 font-bold text-ink transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none whitespace-nowrap;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
   .btn-primary {
-    @apply bg-blue-deep text-white;
+    color: #fff;
+    background-image: linear-gradient(160deg, #1F73D6, #0F56AD);
+    border-color: rgba(255,255,255,.45);
   }
 
   .btn-danger {
-    @apply bg-coral text-ink;
+    background: #FF8A73;
+    border-color: rgba(255,255,255,.45);
+    color: #1E2D42;
   }
 
   .btn-block {
@@ -79,7 +96,12 @@
   }
 
   .input {
-    @apply min-h-[44px] w-full rounded-2xl border-2 border-ink bg-paper px-4 py-2 text-base outline-none focus:border-blue-deep focus:ring-2 focus:ring-blue/40;
+    @apply min-h-[44px] w-full rounded-2xl px-4 py-2 text-base outline-none focus:border-blue-deep focus:ring-2 focus:ring-blue/40;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .field {
@@ -123,7 +145,10 @@
   }
 
   .settings-details {
-    @apply rounded-2xl border-2 border-ink/15 px-4 py-3;
+    @apply rounded-2xl px-4 py-3;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
   .settings-summary {
@@ -135,7 +160,10 @@
   }
 
   .alert {
-    @apply rounded-2xl border-2 px-4 py-3 font-bold;
+    @apply rounded-2xl px-4 py-3 font-bold;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
   .alert-error {
@@ -148,6 +176,8 @@
 
   .auth-card {
     @apply card mx-auto mt-8 flex max-w-md flex-col gap-4;
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .auth-hero {
@@ -257,7 +287,10 @@
   }
 
   .badge {
-    @apply inline-flex items-center rounded-full border-2 border-ink px-3 py-0.5 text-xs font-bold;
+    @apply inline-flex items-center rounded-full px-3 py-0.5 text-xs font-bold;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 10px rgba(40,80,140,.10);
   }
 
   .badge-default {
@@ -293,11 +326,16 @@
   }
 
   .tab {
-    @apply rounded-full border-2 border-ink bg-paper px-4 py-1.5 text-sm font-bold text-muted shadow-sticker;
+    @apply rounded-full px-4 py-1.5 text-sm font-bold text-muted;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
   .tab.is-active {
-    @apply bg-blue-deep text-white;
+    @apply text-white;
+    background: #1F73D6;
+    border-color: rgba(255,255,255,.45);
   }
 
   .word-list {
@@ -461,6 +499,8 @@
 
   .recall-card {
     @apply card mx-auto flex max-w-xl flex-col items-center gap-4 py-8 text-center;
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .recall-progress {
@@ -484,11 +524,15 @@
   }
 
   .btn-known {
-    @apply bg-blue-deep text-white;
+    background: #1F73D6;
+    border-color: rgba(255,255,255,.45);
+    color: #fff;
   }
 
   .btn-unknown {
-    @apply bg-coral text-ink;
+    background: #FF8A73;
+    border-color: rgba(255,255,255,.45);
+    color: #1E2D42;
   }
 
   .recall-answer {
@@ -526,6 +570,8 @@
 
   .summary-card {
     @apply mx-auto mt-10 flex max-w-md flex-col items-center gap-4 text-center;
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .summary-stats {
@@ -582,7 +628,10 @@
   }
 
   .record-row {
-    @apply flex flex-wrap items-center gap-2 rounded-2xl border-2 border-ink bg-paper px-4 py-2;
+    @apply flex flex-wrap items-center gap-2 rounded-2xl px-4 py-2;
+    background: rgba(255,255,255,.86);
+    border: 1px solid rgba(255,255,255,.72);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(40,80,140,.10);
   }
 
   .record-row .stars {
@@ -615,7 +664,12 @@
 
   /* Navigation: bottom tabs on phones, fixed sidebar from md up. */
   .app-nav {
-    @apply fixed inset-x-0 bottom-0 z-20 flex border-t-2 border-ink bg-paper pb-[env(safe-area-inset-bottom)] md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;
+    @apply fixed inset-x-0 bottom-0 z-20 flex pb-[env(safe-area-inset-bottom)] md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-r-2 md:border-t-0 md:px-4 md:py-6;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .nav-link {
@@ -623,7 +677,7 @@
   }
 
   .nav-link.is-active {
-    @apply text-blue-text md:border-2 md:border-ink md:bg-blue/15 md:shadow-sticker;
+    @apply text-blue-text md:border-2 md:border-ink/20 md:bg-blue/15;
   }
 
   .nav-icon {
@@ -663,4 +717,28 @@
   background-clip: text;
   color: transparent;
   -webkit-text-stroke: 1px #1e2d42;
+}
+
+/* Old browsers and reduced-transparency users get clear, opaque surfaces. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .card, .input, .badge, .alert, .tab, .settings-details, .record-row, .app-nav,
+  .btn:not(.btn-primary):not(.btn-danger):not(.btn-known):not(.btn-unknown) {
+    background: rgba(255, 255, 255, .94);
+    border-color: rgba(30, 45, 66, .12);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .card, .input, .badge, .alert, .tab, .settings-details, .record-row, .app-nav,
+  .btn:not(.btn-primary):not(.btn-danger):not(.btn-known):not(.btn-unknown) {
+    background: rgba(255, 255, 255, .96);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .tab, .nav-link { transition: none; }
 }

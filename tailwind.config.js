@@ -22,9 +22,6 @@ module.exports = {
       fontFamily: {
         rounded: ['Nunito', 'system-ui', '-apple-system', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
       },
-      boxShadow: {
-        sticker: '3px 3px 0 #3B3A36',
-      },
       borderRadius: {
         blob: '20px',
       },
