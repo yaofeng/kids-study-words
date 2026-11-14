@@ -135,6 +135,8 @@ Tailwind 配置里把 `teal` 系列改名 `blue` 系列、`teal-dark` 改名 `bl
 - 主按钮统一深蓝底 + 白字（`#1F73D6` 对白色约 4.7:1，渐变末端更深）。
 - 焦点环保持 3px `#1F73D6`，偏移 2px。
 - 触摸设备上所有可点控件命中区域不小于 44px。`.btn`、`.input` 保留现有 `min-h-[44px]`；`.tab`、`.btn-small`、`details summary` 在 `@media (pointer: coarse)` 下扩展命中区，桌面端保持紧凑，不改变页面层级。
+- `layout.html` 的 viewport 加 `viewport-fit=cover`；`.app-main` 和 `.app-nav` 用 `env(safe-area-inset-top/right/bottom/left)` 避开刘海与 Home 指示条。`env()` 不支持时保留普通内边距和 `12px` 悬浮边距降级。
+- 按钮按下只做 `scale(.98)`，不做位移；`prefers-reduced-motion` 时连缩放也取消。
 - 「认识 / 不认识」同时有文字和颜色，不靠颜色单独传达。
 
 ### 5.7 降级

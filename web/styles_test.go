@@ -136,6 +136,61 @@ func TestStarsUseFlatGlassColors(t *testing.T) {
 	}
 }
 
+func TestViewportCoversSafeArea(t *testing.T) {
+	layout, err := os.ReadFile("templates/layout.html")
+	if err != nil {
+		t.Fatalf("read layout.html: %v", err)
+	}
+	if !strings.Contains(string(layout), "viewport-fit=cover") {
+		t.Error("layout.html must opt into the safe-area insets with viewport-fit=cover")
+	}
+
+	data, err := os.ReadFile("static/input.css")
+	if err != nil {
+		t.Fatalf("read input.css: %v", err)
+	}
+	main := ruleBlock(string(data), ".app-main")
+	for _, want := range []string{
+		"safe-area-inset-top",
+		"safe-area-inset-left",
+		"safe-area-inset-right",
+		"safe-area-inset-bottom",
+	} {
+		if !strings.Contains(main, want) {
+			t.Errorf(".app-main should pad for %s", want)
+		}
+	}
+}
+
+func TestButtonPressUsesScale(t *testing.T) {
+	data, err := os.ReadFile("static/input.css")
+	if err != nil {
+		t.Fatalf("read input.css: %v", err)
+	}
+	css := string(data)
+
+	active := ruleBlock(css, ".btn:active")
+	if !strings.Contains(active, "scale(.98)") {
+		t.Error(".btn:active should use a slight scale, per the glass spec")
+	}
+	if strings.Contains(active, "translate") {
+		t.Error(".btn:active still uses the old sticker displacement")
+	}
+
+	marker := "@media (prefers-reduced-motion: reduce)"
+	idx := strings.Index(css, marker)
+	if idx < 0 {
+		t.Fatal("input.css is missing the reduced-motion guard")
+	}
+	guard := css[idx:]
+	if len(guard) > 240 {
+		guard = guard[:240]
+	}
+	if !strings.Contains(guard, "transform: none") {
+		t.Error("reduced motion should cancel the button press transform")
+	}
+}
+
 func TestNavHitAreasAndSafeArea(t *testing.T) {
 	data, err := os.ReadFile("static/input.css")
 	if err != nil {

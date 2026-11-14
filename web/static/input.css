@@ -73,11 +73,33 @@
     box-shadow: var(--glass-shadow);
   }
 
+  .app-main {
+    padding: 1.5rem 1rem 7rem;
+    padding-top: calc(1.5rem + env(safe-area-inset-top));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  @media (min-width: 768px) {
+    .app-main {
+      padding: 1.5rem 1rem 2.5rem 18rem;
+      padding-top: calc(1.5rem + env(safe-area-inset-top));
+      padding-right: max(1rem, env(safe-area-inset-right));
+      padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+      padding-left: calc(18rem + env(safe-area-inset-left));
+    }
+  }
+
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-5 py-2 font-bold text-ink transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none whitespace-nowrap;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-5 py-2 font-bold text-ink transition-transform whitespace-nowrap;
     background: var(--glass-fill);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
+  }
+
+  .btn:active {
+    transform: scale(.98);
   }
 
   .btn-primary {
@@ -668,6 +690,9 @@
     @apply fixed inset-x-0 bottom-0 z-20 flex md:inset-y-0 md:right-auto md:w-64 md:flex-col md:gap-2 md:border-t-0 md:px-4 md:py-6;
     left: .75rem;
     right: .75rem;
+    bottom: .75rem;
+    left: max(.75rem, env(safe-area-inset-left));
+    right: max(.75rem, env(safe-area-inset-right));
     bottom: calc(.75rem + env(safe-area-inset-bottom));
     padding: 6px;
     border-radius: 999px;
@@ -684,6 +709,9 @@
       right: auto;
       bottom: 0;
       padding: 0;
+      padding-top: calc(1.5rem + env(safe-area-inset-top));
+      padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
       border-width: 0 1px 0 0;
       border-radius: 0;
     }
@@ -804,4 +832,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .btn, .tab, .nav-link { transition: none; }
+  .btn:active { transform: none; }
 }
