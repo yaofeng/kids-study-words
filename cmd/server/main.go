@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	studywords "github.com/yaofeng/kids-study-words"
 	"github.com/yaofeng/kids-study-words/internal/ai"
 	"github.com/yaofeng/kids-study-words/internal/auth"
 	"github.com/yaofeng/kids-study-words/internal/config"
@@ -23,8 +24,8 @@ import (
 	"golang.org/x/term"
 )
 
-// version is injected at build time via -ldflags "-X main.version=...".
-var version = "0.9.0"
+// version comes from the .version file embedded at build time.
+var version = studywords.Version
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {

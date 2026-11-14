@@ -4,7 +4,7 @@
 
 界面活泼但不抢注意力，手机和平板都能用；数据完全在自己的设备上。
 
-当前版本 `0.9.0`，Docker 镜像标签为 `v0.9.0`（`latest` 跟随 `main` 最新构建）。
+发布版本的镜像标签是 `v<版本>`（`latest` 跟随 `main` 最新构建），版本号只写在仓库根目录的 `.version` 文件中。
 
 | 查词 | 回忆 | 记录 |
 | --- | --- | --- |
@@ -28,7 +28,7 @@
 # docker-compose.yml
 services:
   study-words:
-    image: <dockerhub-user>/kids-study-words:v0.9.0
+    image: <dockerhub-user>/kids-study-words:latest
     ports:
       - "8080:8080"
     volumes:
@@ -116,7 +116,9 @@ docker compose exec study-words /app/study-words reset-password <用户名>
 
 - `ci.yml`：`gofmt`、`go vet`、`go test`、`go build`。
 - `docker.yml`：测试通过后构建 `linux/amd64` 和 `linux/arm64` 镜像并推送到 Docker Hub；
-  `main` 推送 `latest` 和 `sha-*`，`v*` 标签发布 `v<版本>` 镜像（例如 `v0.9.0`）。
+  `main` 推送 `latest`、`v<版本>` 和 `sha-*`，版本号取自 `.version`。
+
+发布新版本时先修改 `.version` 再推送；设置页显示的版本和镜像的 `v<版本>` 标签都来自这个文件。
 
 在仓库的 Actions secrets 中配置：
 

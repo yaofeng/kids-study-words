@@ -1,9 +1,6 @@
 # syntax=docker/dockerfile:1
 # The go.mod directive needs a 1.26 toolchain (the spec's "Go 1.24+" is a floor).
-ARG VERSION=0.9.0
-
 FROM golang:1.26-alpine AS build
-ARG VERSION
 RUN apk add --no-cache ca-certificates curl bash
 WORKDIR /src
 
@@ -13,7 +10,7 @@ RUN go mod download
 COPY . .
 RUN bash scripts/prepare-dict.sh
 RUN CGO_ENABLED=0 go build -trimpath \
-    -ldflags "-s -w -X main.version=${VERSION}" \
+    -ldflags "-s -w" \
     -o /out/study-words ./cmd/server
 
 FROM alpine:3.20

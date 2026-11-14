@@ -3,8 +3,6 @@ services:
     image: study-words:local
     build:
       context: .
-      args:
-        VERSION: ${VERSION:-0.9.0}
     ports:
       - "${PORT:-8080}:8080"
     environment:
