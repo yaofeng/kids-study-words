@@ -14,10 +14,13 @@
 
 - **查词**：英译中、中译英；英译中可看本地例句（可选 AI 补充），结果一键加入生词本；已收录的单词会标出所在生词本。
 - **生词本**：可建多个生词本并指定默认本；记录加入时间；每个词有 1–10 的熟练度，新词为 5；删除生词本需要再次输入当前密码。
+- **生词分组**：在一个生词本内建分组并勾选本内单词；一个词可以同时属于多个分组，分组不跨生词本。
 - **回忆**：选一个生词本，只显示英文，点「认识 / 不认识」增减熟练度并显示释义、例句和星级；本轮显示用时和认识数量 / 已回忆数量。
   - 随机权重同时考虑熟练度和上次回忆时间：越不熟、越久没复习的词越容易出现。
   - 星级为 1–5 星，支持半星。
+- **按范围回忆**：开始前可选全部、低于指定星级（低于 1–5 星）或一个或多个分组；小结页可以沿用上一轮范围或重新选择。
 - **回忆记录**：按天分组，记录单词、时间、第几次回忆和是否认识。
+- **MCP 访问**：生成访问令牌，让支持 MCP 的 Agent 管理生词本、分组和单词，并读取原始回忆记录。
 - **导入导出**：完整导出为 JSON，可合并或覆盖导入，换设备不丢数据。
 - **账号**：首次打开引导创建账号；之后可在登录页用已有账号的用户名和密码授权注册新账号，每个账号的生词本和记录互相独立；支持修改密码和退出登录。
 - **可选 AI 例句**：兼容 OpenAI Chat Completions 的服务，生成结果会缓存，失败时自动退回本地例句。
@@ -86,6 +89,51 @@ docker compose up -d --build
 | `AI_BASE_URL` | 空 | AI 接口地址 |
 | `AI_API_KEY` | 空 | AI key |
 | `AI_MODEL` | 空 | AI 模型名 |
+
+## 生词分组与回忆范围
+
+在生词本详情页的「分组」区域新建分组，点进组页面勾选本内单词。开始回忆前会进入范围页，可以选择：
+
+- 全部
+- 低于指定星级（2–10 级对应低于 1 星到低于 5 星）
+- 一个或多个分组
+
+小结页的「再来一轮」沿用上一轮范围，「换个范围」回到范围页。
+
+## MCP 访问
+
+在「设置 → MCP 访问」生成访问令牌。令牌只显示一次，数据库只保存它的哈希；重新生成或撤销后旧令牌立即失效。修改密码也会撤销令牌。
+
+客户端配置示例：
+
+```json
+{
+  "mcpServers": {
+    "study-words": {
+      "type": "http",
+      "url": "https://your-host/mcp",
+      "headers": {
+        "Authorization": "Bearer mcp_..."
+      }
+    }
+  }
+}
+```
+
+Claude Code：
+
+```bash
+claude mcp add --transport http study-words https://your-host/mcp \
+  --header "Authorization: Bearer mcp_..."
+```
+
+说明：
+
+- 令牌是完整账号凭证，只通过 HTTPS 使用，不要提交到仓库或分享。
+- 反向代理需要放行 `/mcp` 的 POST；不需要 Cookie。
+- 服务端以 stateless + JSON 响应运行，不依赖长连接。
+- 提供 `list_notebooks`、`create_notebook`、`rename_notebook`、`list_words`、`add_word`、`remove_word`、`list_groups`、`get_group`、`create_group`、`rename_group`、`delete_group`、`add_group_words`、`remove_group_words`、`query_recall_logs`。
+- 学习分析由 Agent 基于 `query_recall_logs` 的原始记录自行完成；系统不内置分析算法。
 
 ## 本地开发
 
