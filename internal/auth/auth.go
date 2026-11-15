@@ -43,6 +43,17 @@ func randomString(n int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
+// NewPrefixedToken returns a fresh n-byte token with prefix prepended, along
+// with the storage hash of the full raw token.
+func NewPrefixedToken(prefix string, n int) (raw, hash string, err error) {
+	raw, err = randomString(n)
+	if err != nil {
+		return "", "", err
+	}
+	raw = prefix + raw
+	return raw, HashToken(raw), nil
+}
+
 // NewToken returns a fresh 32-byte session token and its storage hash.
 func NewToken() (raw, hash string, err error) {
 	raw, err = randomString(32)

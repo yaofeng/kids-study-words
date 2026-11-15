@@ -33,6 +33,23 @@ func TestCreateUserAddsAnotherAccount(t *testing.T) {
 	}
 }
 
+func TestUpdatePasswordRevokesMCPToken(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, _, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	_, _ = st.ReplaceMCPToken(ctx, u.ID, "hash1")
+	if err := st.UpdatePassword(ctx, u.ID, "newhash"); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := st.UserByID(ctx, u.ID)
+	if got.PasswordHash != "newhash" {
+		t.Fatalf("hash=%q", got.PasswordHash)
+	}
+	if _, err := st.UserByMCPToken(ctx, "hash1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("token should be revoked: %v", err)
+	}
+}
+
 func TestCreateUserRejectsDuplicateUsername(t *testing.T) {
 	st := newTestStore(t)
 	ctx := context.Background()

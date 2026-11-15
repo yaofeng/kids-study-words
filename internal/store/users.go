@@ -109,9 +109,17 @@ func (s *Store) UserByID(ctx context.Context, id int64) (User, error) {
 	return scanUser(row)
 }
 
-// UpdatePassword replaces the password hash for a user.
+// UpdatePassword replaces the password hash for a user and revokes any MCP
+// token the user has issued, so a stolen token cannot outlive the old
+// password.
 func (s *Store) UpdatePassword(ctx context.Context, userID int64, hash string) error {
-	res, err := s.db.ExecContext(ctx, `UPDATE users SET password_hash = ? WHERE id = ?`, hash, userID)
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin: %w", err)
+	}
+	defer tx.Rollback()
+
+	res, err := tx.ExecContext(ctx, `UPDATE users SET password_hash = ? WHERE id = ?`, hash, userID)
 	if err != nil {
 		return fmt.Errorf("update password: %w", err)
 	}
@@ -121,6 +129,12 @@ func (s *Store) UpdatePassword(ctx context.Context, userID int64, hash string) e
 	}
 	if n == 0 {
 		return ErrNotFound
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM mcp_tokens WHERE user_id = ?`, userID); err != nil {
+		return fmt.Errorf("revoke mcp token: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
 	}
 	return nil
 }

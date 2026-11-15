@@ -84,3 +84,10 @@ CREATE TABLE IF NOT EXISTS word_group_members (
 
 CREATE INDEX IF NOT EXISTS word_group_members_word
   ON word_group_members(word_id);
+
+CREATE TABLE IF NOT EXISTS mcp_tokens (
+  user_id      INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  token_hash   TEXT NOT NULL UNIQUE,
+  created_at   TEXT NOT NULL,
+  last_used_at TEXT
+);

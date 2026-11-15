@@ -39,6 +39,23 @@ func TestPasswordAndTokens(t *testing.T) {
 	}
 }
 
+func TestNewPrefixedToken(t *testing.T) {
+	raw, hash, err := NewPrefixedToken("mcp_", 32)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(raw, "mcp_") || len(raw) != 47 {
+		t.Fatalf("raw=%q len=%d", raw, len(raw))
+	}
+	if hash != HashToken(raw) {
+		t.Fatal("hash mismatch")
+	}
+	raw2, _, _ := NewPrefixedToken("mcp_", 32)
+	if raw2 == raw {
+		t.Fatal("tokens should differ")
+	}
+}
+
 func TestLoginLimiter(t *testing.T) {
 	now := time.Unix(0, 0)
 	l := NewLoginLimiter(5, time.Minute, func() time.Time { return now })
