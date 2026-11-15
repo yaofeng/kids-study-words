@@ -46,7 +46,7 @@ func csrfFrom(r *http.Request) string {
 // publicPath lists routes that do not require an account or a session.
 func publicPath(path string) bool {
 	switch path {
-	case "/healthz", "/login", "/setup", "/register":
+	case "/healthz", "/login", "/setup", "/register", "/mcp":
 		return true
 	}
 	return strings.HasPrefix(path, "/static/")
@@ -168,6 +168,12 @@ func (s *Server) setupGateMiddleware(next http.Handler) http.Handler {
 // csrfMiddleware rejects state-changing requests without a valid token.
 func (s *Server) csrfMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// /mcp authenticates with its own bearer token, not the cookie
+		// session, so CSRF tokens do not apply.
+		if r.URL.Path == "/mcp" {
+			next.ServeHTTP(w, r)
+			return
+		}
 		switch r.Method {
 		case http.MethodGet, http.MethodHead, http.MethodOptions:
 			next.ServeHTTP(w, r)

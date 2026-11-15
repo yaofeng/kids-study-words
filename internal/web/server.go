@@ -14,6 +14,7 @@ import (
 
 	"github.com/yaofeng/kids-study-words/internal/ai"
 	"github.com/yaofeng/kids-study-words/internal/auth"
+	"github.com/yaofeng/kids-study-words/internal/mcpserver"
 	"github.com/yaofeng/kids-study-words/internal/recall"
 	"github.com/yaofeng/kids-study-words/internal/store"
 	assets "github.com/yaofeng/kids-study-words/web"
@@ -51,6 +52,7 @@ type Server struct {
 	recall       *recall.Manager
 	assetVersion string
 	renderer     *renderer
+	mcp          http.Handler
 	handler      http.Handler
 }
 
@@ -91,6 +93,13 @@ func New(opts Options) (*Server, error) {
 		assetVersion: staticVersion(staticFS),
 	}
 	s.renderer = newRenderer(tmplFS, s.templateFuncs())
+	s.mcp = mcpserver.NewHandler(mcpserver.Config{
+		Store:    opts.Store,
+		Dict:     opts.Dict,
+		Location: opts.Location,
+		Version:  opts.Version,
+		Now:      opts.Now,
+	})
 
 	mux := s.routes(staticFS)
 	var h http.Handler = mux
@@ -189,6 +198,13 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 
 	static := http.StripPrefix("/static/", http.FileServerFS(staticFS))
 	mux.Handle("GET /static/", cacheControl(static, "max-age=3600"))
+
+	// Registered per method because a method-less "/mcp" pattern conflicts
+	// with the "GET /" catch-all in Go's ServeMux. The SDK answers the
+	// non-POST verbs itself (405 in stateless mode).
+	mux.Handle("POST /mcp", s.mcp)
+	mux.Handle("GET /mcp", s.mcp)
+	mux.Handle("DELETE /mcp", s.mcp)
 
 	mux.HandleFunc("GET /", s.handleNotFound)
 	return mux
