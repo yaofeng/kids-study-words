@@ -145,6 +145,13 @@ func (s *Store) WordByID(ctx context.Context, notebookID, id int64) (Word, error
 	return scanWord(row)
 }
 
+// WordByText loads one word by its case-insensitive text within a notebook.
+func (s *Store) WordByText(ctx context.Context, notebookID int64, text string) (Word, error) {
+	return scanWord(s.db.QueryRowContext(ctx,
+		`SELECT `+wordColumns+` FROM words WHERE notebook_id = ? AND word = ? COLLATE NOCASE`,
+		notebookID, strings.TrimSpace(text)))
+}
+
 // AddWord inserts a word. Zero proficiency means the starting value 5; a zero
 // AddedAt means now. LastReviewedAt and ReviewCount are kept as provided so
 // imports can restore history.

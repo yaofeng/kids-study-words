@@ -95,6 +95,20 @@ func wordsIDs(ws []Word) []int64 {
 	return ids
 }
 
+func TestWordByTextCaseInsensitive(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	_, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	w, _ := st.AddWord(ctx, nb.ID, Word{Word: "Apple"})
+	got, err := st.WordByText(ctx, nb.ID, " apple ")
+	if err != nil || got.ID != w.ID {
+		t.Fatalf("got=%+v err=%v", got, err)
+	}
+	if _, err := st.WordByText(ctx, nb.ID, "pear"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("missing: %v", err)
+	}
+}
+
 func TestDeleteWordAndTouchNotebook(t *testing.T) {
 	st, nb := seedNotebook(t)
 	ctx := context.Background()
