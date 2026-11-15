@@ -145,6 +145,12 @@ func TestNotebookWordShowsThreeLines(t *testing.T) {
 		t.Fatalf("word card missing: %s", body)
 	}
 	card := body[cardAt:]
+	// The English heading must be the word itself. Embedding store.Word as a
+	// field named Word shadows its Word string in templates, which printed the
+	// whole struct here.
+	if !strings.Contains(card, `<span class="word-en">apple</span>`) {
+		t.Fatalf("word heading is not the word: %s", card)
+	}
 	wordAt := strings.Index(card, "apple")
 	zhAt := strings.Index(card, "n. 苹果")
 	metaAt := strings.Index(card, "加入于")

@@ -40,6 +40,35 @@ updateRoundTimers();
 setInterval(updateRoundTimers, 1000);
 document.body.addEventListener('htmx:afterSwap', updateRoundTimers);
 
+// Read recall words aloud with the browser's speech synthesis. A card marked
+// with data-speak-auto speaks once when it appears; speaker buttons marked with
+// data-speak replay their word on demand.
+let lastAutoSpokenCard = null;
+
+function speakWord(text) {
+  if (!text || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.9;
+  window.speechSynthesis.speak(utterance);
+}
+
+function autoSpeakRecallCard() {
+  const el = document.querySelector('[data-speak-auto]');
+  if (!el || el === lastAutoSpokenCard) return;
+  lastAutoSpokenCard = el;
+  speakWord(el.getAttribute('data-speak-auto'));
+}
+
+autoSpeakRecallCard();
+document.body.addEventListener('htmx:afterSwap', autoSpeakRecallCard);
+
+document.addEventListener('click', (event) => {
+  const btn = event.target.closest('[data-speak]');
+  if (btn) speakWord(btn.getAttribute('data-speak'));
+});
+
 // Toggle the settings panel on a notebook card.
 document.addEventListener('click', (event) => {
   const toggle = event.target.closest('[data-settings-toggle]');
@@ -82,6 +111,30 @@ document.addEventListener('click', (event) => {
     }
     remove.closest('.example-row').remove();
     renumberExamples(list);
+  }
+});
+
+// Open and close modal dialogs marked with data-open-dialog / data-close-dialog.
+document.addEventListener('click', (event) => {
+  const opener = event.target.closest('[data-open-dialog]');
+  if (opener) {
+    const dialog = document.getElementById(opener.getAttribute('data-open-dialog'));
+    if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+    return;
+  }
+  const closer = event.target.closest('[data-close-dialog]');
+  if (closer) {
+    const dialog = closer.closest('dialog');
+    if (dialog) dialog.close();
+    return;
+  }
+  // A click on the backdrop lands on the dialog element itself, outside its box.
+  const dialog = event.target;
+  if (dialog instanceof HTMLDialogElement && dialog.open) {
+    const box = dialog.getBoundingClientRect();
+    const outside = event.clientX < box.left || event.clientX > box.right ||
+      event.clientY < box.top || event.clientY > box.bottom;
+    if (outside) dialog.close();
   }
 });
 

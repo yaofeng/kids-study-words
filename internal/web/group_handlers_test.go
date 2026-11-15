@@ -75,6 +75,11 @@ func TestGroupPageShowsWordsAndSavesMembers(t *testing.T) {
 	if !strings.Contains(body, "apple") || !strings.Contains(body, "pear") || !strings.Contains(body, "保存") {
 		t.Fatalf("page=%s", body)
 	}
+	// Same shadowing risk as the notebook page: the row heading must be the
+	// word text, never a dumped store.Word struct.
+	if !strings.Contains(body, `<span class="word-en">apple</span>`) {
+		t.Fatalf("group word heading is not the word: %s", body)
+	}
 	resp := tc.postForm(path+"/words", url.Values{"word_id": {fmt.Sprint(a.ID), fmt.Sprint(b.ID)}})
 	if resp.Code != http.StatusSeeOther {
 		t.Fatalf("code=%d body=%s", resp.Code, resp.Body.String())

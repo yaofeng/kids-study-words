@@ -37,6 +37,11 @@
   <path d="M12 13l2.6 1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
 </svg>{{end}}
 
+{{define "icon_sound"}}<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+  <path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.6a7.6 7.6 0 0 1 0 10.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>{{end}}
+
 
 {{define "nav"}}
 <nav class="app-nav" aria-label="主导航">
@@ -150,7 +155,10 @@
 <article class="recall-card" id="recall-card">
   {{template "recall_progress" .}}
   {{if .Word}}
-  <div class="recall-word" lang="en">{{.Word.Word}}</div>
+  <div class="recall-word-row">
+    <div class="recall-word" lang="en" data-speak-auto="{{.Word.Word}}">{{.Word.Word}}</div>
+    <button class="word-speak" type="button" data-speak="{{.Word.Word}}" aria-label="朗读单词「{{.Word.Word}}」" title="再读一遍">{{template "icon_sound"}}</button>
+  </div>
   <div class="recall-actions">
     <button class="btn btn-unknown" type="button"
             hx-post="/recall/{{$.Notebook.ID}}/answer"
@@ -179,7 +187,10 @@
 {{define "recall_answer"}}
 <article class="recall-card recall-answer" id="recall-card">
   {{template "recall_progress" .}}
-  <div class="recall-word" lang="en">{{.Word.Word}}</div>
+  <div class="recall-word-row">
+    <div class="recall-word" lang="en">{{.Word.Word}}</div>
+    <button class="word-speak" type="button" data-speak="{{.Word.Word}}" aria-label="朗读单词「{{.Word.Word}}」" title="再读一遍">{{template "icon_sound"}}</button>
+  </div>
   {{if .Word.Phonetic}}<p class="word-phonetic">{{.Word.Phonetic}}</p>{{end}}
   <p class="recall-result {{if .Log.Known}}is-known{{else}}is-unknown{{end}}">
     {{if .Log.Known}}认识{{else}}不认识{{end}} · 第 {{.Log.ReviewCount}} 次回忆

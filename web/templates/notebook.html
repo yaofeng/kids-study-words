@@ -48,23 +48,23 @@
       <div class="word-content">
         <div class="word-main">
           <div class="word-line">
-            <span class="word-en">{{.Word}}</span>
-            {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
+            <span class="word-en">{{.Word.Word}}</span>
+            {{if .Word.Phonetic}}<span class="word-phonetic">{{.Word.Phonetic}}</span>{{end}}
           </div>
-          <p class="word-translation">{{FirstLine .Translation}}</p>
+          <p class="word-translation">{{FirstLine .Word.Translation}}</p>
           {{if .Groups}}
           <p class="word-groups">{{range .Groups}}<span class="badge">{{.Name}}</span>{{end}}</p>
           {{end}}
         </div>
         <div class="word-side">
-          <span>加入于 {{FormatDate .AddedAt}}</span>
-          <span>{{template "stars" .Proficiency}}</span>
-          <span>回忆 {{.ReviewCount}} 次</span>
+          <span>加入于 {{FormatDate .Word.AddedAt}}</span>
+          <span>{{template "stars" .Word.Proficiency}}</span>
+          <span>回忆 {{.Word.ReviewCount}} 次</span>
         </div>
       </div>
-      <form method="post" action="/notebooks/{{$.Notebook.ID}}/words/{{.ID}}/delete" class="word-delete">
+      <form method="post" action="/notebooks/{{$.Notebook.ID}}/words/{{.Word.ID}}/delete" class="word-delete">
         {{template "csrf" $}}
-        <button type="submit" data-confirm="删除单词「{{.Word}}」？">删除</button>
+        <button type="submit" data-confirm="删除单词「{{.Word.Word}}」？">删除</button>
       </form>
     </div>
   </li>

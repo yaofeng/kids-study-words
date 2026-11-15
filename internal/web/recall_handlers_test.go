@@ -12,6 +12,30 @@ import (
 	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
+func TestRecallCardsSpeakTheWord(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	w := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
+	body := tc.get("/recall/" + fmt.Sprint(tc.notebook.ID)).Body.String()
+	// The question card auto-speaks the word and offers a replay button.
+	if !strings.Contains(body, `data-speak-auto="apple"`) {
+		t.Fatalf("question card does not auto-speak: %s", body)
+	}
+	if !strings.Contains(body, `<button class="word-speak" type="button" data-speak="apple"`) {
+		t.Fatalf("question card has no speaker button: %s", body)
+	}
+	answer := tc.postForm(fmt.Sprintf("/recall/%d/answer", tc.notebook.ID), url.Values{
+		"word_id": {fmt.Sprint(w.ID)}, "known": {"1"}, "csrf_token": {tc.csrf},
+	}).Body.String()
+	// The answer card shows the same word, so it keeps the replay button but
+	// must not auto-speak it a second time.
+	if strings.Contains(answer, "data-speak-auto") {
+		t.Fatalf("answer card auto-speaks again: %s", answer)
+	}
+	if !strings.Contains(answer, `data-speak="apple"`) {
+		t.Fatalf("answer card has no speaker button: %s", answer)
+	}
+}
+
 func TestRecallHidesMeaningUntilAnswer(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")

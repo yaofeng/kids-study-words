@@ -12,8 +12,10 @@ import (
 const maxExamples = 5
 
 // notebookWord pairs a word with the groups that contain it for the card badges.
+// Word is a named field, not an embedded store.Word: embedding would create an
+// outer field also called Word, shadowing the word's own Word string in templates.
 type notebookWord struct {
-	store.Word
+	Word   store.Word
 	Groups []store.WordGroup
 }
 

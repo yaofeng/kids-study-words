@@ -12,8 +12,10 @@ import (
 const maxGroupNameRunes = 40
 
 // groupWord pairs a notebook word with whether it belongs to the group.
+// Word is a named field, not an embedded store.Word: embedding would create an
+// outer field also called Word, shadowing the word's own Word string in templates.
 type groupWord struct {
-	store.Word
+	Word    store.Word
 	Checked bool
 }
 
