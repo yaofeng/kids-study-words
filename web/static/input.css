@@ -361,6 +361,15 @@
     border-color: rgba(255,255,255,.45);
   }
 
+  .group-section { @apply mb-5 flex flex-col gap-3; }
+  .group-head { @apply flex items-center justify-between gap-2; }
+  .group-title { @apply text-lg font-extrabold; }
+  .group-create { @apply flex flex-col gap-2 sm:flex-row; }
+  .group-chips { @apply flex flex-wrap gap-2; }
+  .group-chip { @apply gap-1 text-sm text-ink; }
+  .group-count { @apply text-xs text-muted; }
+  .word-groups { @apply mt-1 flex flex-wrap gap-1; }
+
   .word-list {
     @apply flex flex-col gap-3;
   }

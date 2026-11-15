@@ -154,6 +154,25 @@ func (s *Server) handleDeleteNotebook(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/notebooks", http.StatusSeeOther)
 }
 
+// loadNotebook parses {id} and loads a notebook owned by the current user.
+// It renders the error page itself and reports false on failure.
+func (s *Server) loadNotebook(w http.ResponseWriter, r *http.Request) (store.Notebook, bool) {
+	id, ok := s.pathID(w, r)
+	if !ok {
+		return store.Notebook{}, false
+	}
+	nb, err := s.store.NotebookByID(r.Context(), currentUser(r).ID, id)
+	if errors.Is(err, store.ErrNotFound) {
+		s.renderError(w, r, http.StatusNotFound, "生词本不存在。")
+		return store.Notebook{}, false
+	}
+	if err != nil {
+		s.fail(w, r, err)
+		return store.Notebook{}, false
+	}
+	return nb, true
+}
+
 // pathID parses the {id} path value or renders a 404.
 func (s *Server) pathID(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)

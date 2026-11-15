@@ -11,12 +11,20 @@ import (
 
 const maxExamples = 5
 
+// notebookWord pairs a word with the groups that contain it for the card badges.
+type notebookWord struct {
+	store.Word
+	Groups []store.WordGroup
+}
+
 // notebookDetailData feeds web/templates/notebook.html.
 type notebookDetailData struct {
 	Base
-	Notebook store.Notebook
-	Words    []store.Word
-	Sort     string
+	Notebook   store.Notebook
+	Words      []notebookWord
+	Groups     []store.WordGroup
+	Sort       string
+	GroupError string
 }
 
 // exampleRow is one editable sentence on the word edit page.
@@ -45,31 +53,47 @@ func validSort(s string) string {
 }
 
 func (s *Server) handleNotebookDetail(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.pathID(w, r)
+	nb, ok := s.loadNotebook(w, r)
 	if !ok {
 		return
 	}
-	userID := currentUser(r).ID
-	nb, err := s.store.NotebookByID(r.Context(), userID, id)
-	if errors.Is(err, store.ErrNotFound) {
-		s.renderError(w, r, http.StatusNotFound, "生词本不存在。")
-		return
-	}
-	if err != nil {
-		s.fail(w, r, err)
-		return
-	}
-	sortKey := validSort(r.URL.Query().Get("sort"))
+	s.renderNotebookDetail(w, r, nb, r.URL.Query().Get("sort"), "")
+}
+
+// renderNotebookDetail renders the notebook page, optionally with a group error.
+func (s *Server) renderNotebookDetail(w http.ResponseWriter, r *http.Request, nb store.Notebook, sortKey, groupErr string) {
+	sortKey = validSort(sortKey)
 	words, err := s.store.ListWords(r.Context(), nb.ID, sortKey)
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
+	groups, err := s.store.ListWordGroups(r.Context(), nb.ID)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	members, err := s.store.GroupMemberships(r.Context(), nb.ID)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	out := make([]notebookWord, len(words))
+	for i, w := range words {
+		out[i] = notebookWord{Word: w, Groups: members[w.ID]}
+	}
 	base, ok := s.pageData(w, r, nb.Name, "notebooks")
 	if !ok {
 		return
 	}
-	data := notebookDetailData{Base: base, Notebook: nb, Words: words, Sort: sortKey}
+	data := notebookDetailData{
+		Base:       base,
+		Notebook:   nb,
+		Words:      out,
+		Groups:     groups,
+		Sort:       sortKey,
+		GroupError: groupErr,
+	}
 	_ = s.renderer.page(w, http.StatusOK, "notebook", data)
 }
 

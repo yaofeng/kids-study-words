@@ -19,6 +19,27 @@
   <a class="tab{{if eq .Sort "reviewed"}} is-active{{end}}" href="?sort=reviewed">最近回忆</a>
 </div>
 
+<section class="group-section">
+  <div class="group-head">
+    <h2 class="group-title">分组</h2>
+  </div>
+  {{if .GroupError}}<p class="alert alert-error" role="alert">{{.GroupError}}</p>{{end}}
+  <form method="post" action="/notebooks/{{.Notebook.ID}}/groups" class="group-create">
+    {{template "csrf" .}}
+    <input class="input" type="text" name="name" maxlength="40" placeholder="新分组名称" required>
+    <button class="btn" type="submit">新建分组</button>
+  </form>
+  {{if .Groups}}
+  <ul class="group-chips">
+    {{range .Groups}}
+    <li><a class="badge group-chip" href="/notebooks/{{$.Notebook.ID}}/groups/{{.ID}}">{{.Name}} <span class="group-count">{{.WordCount}}</span></a></li>
+    {{end}}
+  </ul>
+  {{else}}
+  <p class="muted-text">还没有分组。</p>
+  {{end}}
+</section>
+
 {{if .Words}}
 <ul class="word-list">
   {{range .Words}}
@@ -31,6 +52,9 @@
             {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
           </div>
           <p class="word-translation">{{FirstLine .Translation}}</p>
+          {{if .Groups}}
+          <p class="word-groups">{{range .Groups}}<span class="badge">{{.Name}}</span>{{end}}</p>
+          {{end}}
         </div>
         <div class="word-side">
           <span>加入于 {{FormatDate .AddedAt}}</span>

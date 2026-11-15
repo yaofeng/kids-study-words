@@ -153,6 +153,7 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 	mux.HandleFunc("POST /notebooks/{id}/rename", s.handleRenameNotebook)
 	mux.HandleFunc("POST /notebooks/{id}/default", s.handleSetDefaultNotebook)
 	mux.HandleFunc("POST /notebooks/{id}/delete", s.handleDeleteNotebook)
+	mux.HandleFunc("POST /notebooks/{id}/groups", s.handleCreateGroup)
 	mux.HandleFunc("GET /notebooks/{id}", s.handleNotebookDetail)
 	mux.HandleFunc("GET /notebooks/{id}/words/{wordID}/edit", s.handleWordEditPage)
 	mux.HandleFunc("POST /notebooks/{id}/words/{wordID}/edit", s.handleWordEditPost)
