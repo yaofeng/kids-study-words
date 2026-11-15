@@ -8,4 +8,5 @@ var (
 	ErrSetupComplete = errors.New("setup already complete")
 	ErrDuplicate     = errors.New("duplicate")
 	ErrLastNotebook  = errors.New("cannot delete the last notebook")
+	ErrInvalidScope  = errors.New("invalid recall scope")
 )
