@@ -37,7 +37,7 @@ func newServer(cfg Config, userID int64) *mcp.Server {
 	s := mcp.NewServer(&mcp.Implementation{
 		Name: "study-words", Title: "少儿背单词", Version: cfg.Version,
 	}, &mcp.ServerOptions{
-		Instructions: "所有操作都作用于当前访问令牌对应的账号。时间按服务器时区。需要学习分析时，请用 query_recall_logs 获取原始记录后自行计算。",
+		Instructions: "所有操作都作用于当前访问令牌对应的账号。除 query_recall_logs 的日期参数（YYYY-MM-DD，按服务器时区解释）外，所有时间字段均为 UTC（RFC3339）。需要学习分析时，请用 query_recall_logs 获取原始记录后自行计算。",
 	})
 	registerNotebookTools(s, cfg, userID)
 	registerWordTools(s, cfg, userID)

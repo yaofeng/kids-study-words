@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"unicode/utf8"
 
@@ -122,7 +123,11 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 			words = filtered
 		}
 
-		memberships, _ := cfg.Store.GroupMemberships(ctx, nb.ID)
+		memberships, err := cfg.Store.GroupMemberships(ctx, nb.ID)
+		if err != nil {
+			slog.Warn("list_words: group memberships", "notebook_id", nb.ID, "err", err)
+			memberships = nil
+		}
 
 		limit := in.Limit
 		if limit <= 0 {
@@ -178,9 +183,17 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 		}
 
 		examples := []store.Example{}
-		if cached, ok, err := cfg.Store.CachedExamples(ctx, entry.Word); err == nil && ok && len(cached) > 0 {
+		cached, ok, cacheErr := cfg.Store.CachedExamples(ctx, entry.Word)
+		if cacheErr != nil {
+			slog.Warn("add_word: cached examples", "word", entry.Word, "err", cacheErr)
+		}
+		if cacheErr == nil && ok && len(cached) > 0 {
 			examples = cached
-		} else if sentences, err := cfg.Dict.Examples(ctx, entry.Word, entry.Exchange, 2); err == nil {
+		} else {
+			sentences, exampleErr := cfg.Dict.Examples(ctx, entry.Word, entry.Exchange, 2)
+			if exampleErr != nil {
+				slog.Warn("add_word: dictionary examples", "word", entry.Word, "err", exampleErr)
+			}
 			for _, sent := range sentences {
 				examples = append(examples, store.Example{EN: sent.EN, ZH: sent.ZH, Source: sent.Source})
 			}
@@ -219,7 +232,10 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 			return nil, RemoveWordOutput{}, err
 		}
 
-		memberships, _ := cfg.Store.GroupMemberships(ctx, nb.ID)
+		memberships, err := cfg.Store.GroupMemberships(ctx, nb.ID)
+		if err != nil {
+			slog.Warn("remove_word: group memberships", "notebook_id", nb.ID, "word_id", w.ID, "err", err)
+		}
 		groups := memberships[w.ID]
 		out := RemoveWordOutput{
 			Removed: true,
