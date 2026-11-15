@@ -224,22 +224,13 @@ func registerGroupTools(s *mcp.Server, cfg Config, userID int64) {
 			slog.Error("get_group: group word ids", "user_id", userID, "group_id", g.ID, "err", err)
 			return nil, GetGroupOutput{}, fmt.Errorf("读取分组单词失败，请稍后重试")
 		}
-		keep := make(map[int64]bool, len(ids))
-		for _, id := range ids {
-			keep[id] = true
-		}
 
 		words, err := cfg.Store.ListWords(ctx, g.NotebookID, "added")
 		if err != nil {
 			slog.Error("get_group: list words", "user_id", userID, "group_id", g.ID, "notebook_id", g.NotebookID, "err", err)
 			return nil, GetGroupOutput{}, fmt.Errorf("读取生词失败，请稍后重试")
 		}
-		filtered := make([]store.Word, 0, len(keep))
-		for _, w := range words {
-			if keep[w.ID] {
-				filtered = append(filtered, w)
-			}
-		}
+		filtered := filterByGroup(words, ids)
 
 		memberships, err := cfg.Store.GroupMemberships(ctx, g.NotebookID)
 		if err != nil {
@@ -247,20 +238,8 @@ func registerGroupTools(s *mcp.Server, cfg Config, userID int64) {
 			memberships = nil
 		}
 
-		limit := in.Limit
-		if limit <= 0 {
-			limit = 200
-		}
-		if limit > 500 {
-			limit = 500
-		}
-		offset := in.Offset
-		if offset < 0 {
-			offset = 0
-		}
 		total := len(filtered)
-		start := min(offset, total)
-		end := min(start+limit, total)
+		start, end := paginate(total, in.Limit, in.Offset)
 		page := filtered[start:end]
 
 		out := GetGroupOutput{

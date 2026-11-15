@@ -69,6 +69,39 @@ func loadMCPNotebook(ctx context.Context, cfg Config, userID, notebookID int64) 
 	return nb, nil
 }
 
+// filterByGroup keeps the words whose IDs are in ids, preserving input order.
+func filterByGroup(words []store.Word, ids []int64) []store.Word {
+	keep := make(map[int64]bool, len(ids))
+	for _, id := range ids {
+		keep[id] = true
+	}
+	filtered := make([]store.Word, 0, len(keep))
+	for _, w := range words {
+		if keep[w.ID] {
+			filtered = append(filtered, w)
+		}
+	}
+	return filtered
+}
+
+// paginate clamps a page request to the MCP contract (default 200, max 500,
+// negative offset treated as 0) and returns the half-open bounds of the page
+// within total.
+func paginate(total, limit, offset int) (start, end int) {
+	if limit <= 0 {
+		limit = 200
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	start = min(offset, total)
+	end = min(start+limit, total)
+	return start, end
+}
+
 // registerWordTools registers the word tools for one account.
 func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 	mcp.AddTool(s, &mcp.Tool{
@@ -110,17 +143,7 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 			if err != nil {
 				return nil, ListWordsOutput{}, err
 			}
-			keep := make(map[int64]bool, len(ids))
-			for _, id := range ids {
-				keep[id] = true
-			}
-			filtered := make([]store.Word, 0, len(words))
-			for _, w := range words {
-				if keep[w.ID] {
-					filtered = append(filtered, w)
-				}
-			}
-			words = filtered
+			words = filterByGroup(words, ids)
 		}
 
 		memberships, err := cfg.Store.GroupMemberships(ctx, nb.ID)
@@ -129,20 +152,8 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 			memberships = nil
 		}
 
-		limit := in.Limit
-		if limit <= 0 {
-			limit = 200
-		}
-		if limit > 500 {
-			limit = 500
-		}
-		offset := in.Offset
-		if offset < 0 {
-			offset = 0
-		}
 		total := len(words)
-		start := min(offset, total)
-		end := min(start+limit, total)
+		start, end := paginate(total, in.Limit, in.Offset)
 		page := words[start:end]
 
 		out := ListWordsOutput{
