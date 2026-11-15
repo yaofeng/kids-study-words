@@ -1,9 +1,11 @@
 package web
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/yaofeng/kids-study-words/internal/auth"
+	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
 // repoURL is shown on the settings page and in the about section.
@@ -18,6 +20,10 @@ type settingsView struct {
 	AIEnabled     bool
 	AIModel       string
 	AIHost        string
+	MCPToken      *store.MCPToken
+	MCPCreated    string
+	MCPLastUsed   string
+	NewMCPToken   string
 }
 
 func (s *Server) settingsData(w http.ResponseWriter, r *http.Request) (settingsView, bool) {
@@ -35,6 +41,19 @@ func (s *Server) settingsData(w http.ResponseWriter, r *http.Request) (settingsV
 		view.AIModel = s.ai.Model()
 		view.AIHost = s.ai.Host()
 	}
+	tok, err := s.store.MCPTokenByUser(r.Context(), currentUser(r).ID)
+	switch {
+	case errors.Is(err, store.ErrNotFound):
+	case err != nil:
+		s.fail(w, r, err)
+		return settingsView{}, false
+	default:
+		view.MCPToken = &tok
+		view.MCPCreated = s.FormatDate(tok.CreatedAt)
+		if tok.LastUsedAt != nil {
+			view.MCPLastUsed = s.FormatDate(*tok.LastUsedAt) + " " + s.FormatTime(*tok.LastUsedAt)
+		}
+	}
 	return view, true
 }
 
@@ -44,6 +63,7 @@ func (s *Server) renderSettingsData(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 	data.Error = msg
+	w.Header().Set("Cache-Control", "no-store")
 	_ = s.renderer.page(w, status, "settings", data)
 }
 
@@ -52,6 +72,7 @@ func (s *Server) handleSettingsPage(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	w.Header().Set("Cache-Control", "no-store")
 	if err := s.renderer.page(w, http.StatusOK, "settings", data); err != nil {
 		s.fail(w, r, err)
 	}

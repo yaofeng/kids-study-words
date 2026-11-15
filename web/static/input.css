@@ -151,6 +151,18 @@
     @apply flex flex-wrap gap-3;
   }
 
+  .token-box {
+    @apply flex flex-col gap-2;
+  }
+
+  .token-row {
+    @apply flex flex-col gap-2 sm:flex-row;
+  }
+
+  .token-value {
+    @apply font-mono text-sm;
+  }
+
   .export-list {
     @apply flex flex-wrap gap-2;
   }

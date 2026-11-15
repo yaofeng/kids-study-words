@@ -37,6 +37,38 @@
 </section>
 
 <section class="card settings-section">
+  <h2 class="settings-title">MCP 访问</h2>
+  <p class="muted-text">用访问令牌让支持 MCP 的 Agent 管理生词本、分组和单词，并读取原始回忆记录。</p>
+  {{if .NewMCPToken}}
+  <div class="token-box">
+    <p class="alert alert-error" role="alert">令牌只显示这一次，请现在复制；如果泄露，请立即重新生成。</p>
+    <div class="token-row">
+      <input class="input token-value" id="mcp-token-value" type="text" value="{{.NewMCPToken}}" readonly>
+      <button class="btn" type="button" data-copy="#mcp-token-value">复制</button>
+    </div>
+  </div>
+  {{end}}
+  {{if .MCPToken}}
+  <p class="muted-text">已生成 · 创建于 {{.MCPCreated}}{{if .MCPLastUsed}} · 最近使用 {{.MCPLastUsed}}{{end}}</p>
+  <div class="settings-actions">
+    <form method="post" action="/settings/mcp-token/generate">
+      {{template "csrf" .}}
+      <button class="btn" type="submit" data-confirm="重新生成后旧令牌会立即失效，确定吗？">重新生成</button>
+    </form>
+    <form method="post" action="/settings/mcp-token/revoke">
+      {{template "csrf" .}}
+      <button class="btn btn-danger" type="submit" data-confirm="撤销令牌后，使用它的 Agent 将立即无法访问。确定吗？">撤销令牌</button>
+    </form>
+  </div>
+  {{else}}
+  <form method="post" action="/settings/mcp-token/generate">
+    {{template "csrf" .}}
+    <button class="btn btn-primary" type="submit">生成访问令牌</button>
+  </form>
+  {{end}}
+</section>
+
+<section class="card settings-section">
   <h2 class="settings-title">导出数据</h2>
   <p class="muted-text">导出文件包含生词本、分组、单词、例句、熟练度和回忆记录，是普通 JSON 文件。</p>
   <div class="settings-actions">

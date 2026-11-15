@@ -104,3 +104,22 @@ document.addEventListener('change', (event) => {
     if (radio) radio.checked = true;
   }
 });
+
+// Copy a value into the clipboard from a button marked with data-copy.
+document.addEventListener('click', async (event) => {
+  const btn = event.target.closest('[data-copy]');
+  if (!btn) return;
+  const input = document.querySelector(btn.getAttribute('data-copy'));
+  if (!input) return;
+  const text = input.value ?? input.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '已复制';
+  } catch {
+    input.focus();
+    input.select();
+    document.execCommand('copy');
+    btn.textContent = '已复制';
+  }
+});
+
