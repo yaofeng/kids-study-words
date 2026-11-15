@@ -4,6 +4,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
 // Errors reported by Manager.
@@ -15,6 +17,7 @@ var (
 // State is a snapshot of one user's current recall round.
 type State struct {
 	NotebookID     int64
+	Scope          store.RecallScope
 	Known          int
 	Unknown        int
 	StartedAt      time.Time
@@ -44,7 +47,19 @@ func cloneState(s *State) State {
 	if s == nil {
 		return State{}
 	}
-	return *s
+	c := *s
+	c.Scope.GroupIDs = append([]int64(nil), s.Scope.GroupIDs...)
+	return c
+}
+
+// Start begins a new round for a notebook with the chosen recall scope.
+func (m *Manager) Start(userID, notebookID int64, scope store.RecallScope) State {
+	scope.GroupIDs = append([]int64(nil), scope.GroupIDs...)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	s := &State{NotebookID: notebookID, Scope: scope, StartedAt: time.Now()}
+	m.states[userID] = s
+	return cloneState(s)
 }
 
 // Begin starts (or keeps) a round for a notebook.
@@ -53,10 +68,14 @@ func (m *Manager) Begin(userID, notebookID int64) State {
 	defer m.mu.Unlock()
 	s := m.states[userID]
 	if s == nil || s.NotebookID != notebookID {
-		s = &State{NotebookID: notebookID, StartedAt: time.Now()}
+		s = &State{
+			NotebookID: notebookID,
+			Scope:      store.RecallScope{Kind: store.ScopeAll},
+			StartedAt:  time.Now(),
+		}
 		m.states[userID] = s
 	}
-	return *s
+	return cloneState(s)
 }
 
 // Snapshot returns the current round without modifying it.
@@ -72,7 +91,7 @@ func (m *Manager) SetLastWord(userID, wordID int64) {
 	defer m.mu.Unlock()
 	s := m.states[userID]
 	if s == nil {
-		s = &State{StartedAt: time.Now()}
+		s = &State{Scope: store.RecallScope{Kind: store.ScopeAll}, StartedAt: time.Now()}
 		m.states[userID] = s
 	}
 	s.LastWordID = wordID
