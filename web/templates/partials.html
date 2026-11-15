@@ -162,8 +162,11 @@
             hx-target="#recall-card" hx-swap="outerHTML">认识</button>
   </div>
   {{else}}
-  <p class="empty-recall">这个生词本还没有单词。</p>
-  <a class="btn" href="/lookup">去查词</a>
+  <p class="empty-recall">这个范围里还没有单词。</p>
+  <div class="detail-actions center-actions">
+    <a class="btn btn-primary" href="{{.ChangeScopeURL}}">换个范围</a>
+    <a class="btn" href="/lookup">去查词</a>
+  </div>
   {{end}}
 </article>
 {{end}}

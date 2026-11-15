@@ -15,10 +15,12 @@ import (
 // recallView feeds both the recall page and its htmx fragments.
 type recallView struct {
 	Base
-	Notebook store.Notebook
-	Word     *store.Word
-	State    recall.State
-	Log      *store.RecallLog
+	Notebook       store.Notebook
+	Word           *store.Word
+	State          recall.State
+	Log            *store.RecallLog
+	ScopeLabel     string
+	ChangeScopeURL string
 }
 
 // summaryData feeds the end-of-round summary.
@@ -72,12 +74,12 @@ func (s *Server) handleRecallPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID := currentUser(r).ID
-	words, err := s.store.ListWords(r.Context(), nb.ID, "added")
+	state := s.recall.Begin(userID, nb.ID)
+	words, err := s.store.ListRecallWords(r.Context(), nb.ID, state.Scope)
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
-	state := s.recall.Begin(userID, nb.ID)
 	var word *store.Word
 	if len(words) > 0 {
 		word = s.pickWord(words, state.LastWordID)
@@ -86,16 +88,23 @@ func (s *Server) handleRecallPage(w http.ResponseWriter, r *http.Request) {
 			state = s.recall.Snapshot(userID)
 		}
 	}
+	groups, err := s.store.ListWordGroups(r.Context(), nb.ID)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 
 	base, ok := s.pageData(w, r, nb.Name, "recall")
 	if !ok {
 		return
 	}
 	_ = s.renderer.page(w, http.StatusOK, "recall", recallView{
-		Base:     base,
-		Notebook: nb,
-		Word:     word,
-		State:    state,
+		Base:           base,
+		Notebook:       nb,
+		Word:           word,
+		State:          state,
+		ScopeLabel:     scopeLabel(state.Scope, groups),
+		ChangeScopeURL: changeScopeURL(nb.ID, state.Scope),
 	})
 }
 
@@ -150,12 +159,12 @@ func (s *Server) handleRecallNext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID := currentUser(r).ID
-	words, err := s.store.ListWords(r.Context(), nb.ID, "added")
+	state := s.recall.Begin(userID, nb.ID)
+	words, err := s.store.ListRecallWords(r.Context(), nb.ID, state.Scope)
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
-	state := s.recall.Begin(userID, nb.ID)
 	var word *store.Word
 	if len(words) > 0 {
 		word = s.pickWord(words, state.LastWordID)
@@ -165,9 +174,10 @@ func (s *Server) handleRecallNext(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	_ = s.renderer.fragment(w, http.StatusOK, "recall_card", recallView{
-		Notebook: nb,
-		Word:     word,
-		State:    state,
+		Notebook:       nb,
+		Word:           word,
+		State:          state,
+		ChangeScopeURL: changeScopeURL(nb.ID, state.Scope),
 	})
 }
 

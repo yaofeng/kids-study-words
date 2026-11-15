@@ -83,4 +83,9 @@ func TestScopeQueryAndLabel(t *testing.T) {
 	if got := scopeLabel(store.RecallScope{Kind: store.ScopeGroups, GroupIDs: []int64{1, 2, 3, 4}}, groups); got != "动物、食物、易错词 等 4 组" {
 		t.Fatalf("label=%q", got)
 	}
+	// Missing names must not leave a dangling separator or a panic when the
+	// scope names more groups than the notebook still has.
+	if got := scopeLabel(store.RecallScope{Kind: store.ScopeGroups, GroupIDs: []int64{1, 99, 100, 101}}, groups); got != "动物 等 4 组" {
+		t.Fatalf("label=%q", got)
+	}
 }

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -127,7 +128,13 @@ func scopeLabel(scope store.RecallScope, groups []store.WordGroup) string {
 			return "分组"
 		}
 		if len(scope.GroupIDs) > 3 {
-			return strings.Join(picked[:3], "、") + fmt.Sprintf(" 等 %d 组", len(scope.GroupIDs))
+			// Truncate by resolved names, never by the requested ids: a group
+			// may have been deleted and leave fewer names than ids.
+			shown := len(picked)
+			if shown > 3 {
+				shown = 3
+			}
+			return strings.Join(picked[:shown], "、") + fmt.Sprintf(" 等 %d 组", len(scope.GroupIDs))
 		}
 		return strings.Join(picked, "、")
 	default:
@@ -202,6 +209,44 @@ func groupIDIn(ids []int64, id int64) bool {
 	return false
 }
 
+// scopeGroupsExist reports whether every group named by a group scope still
+// belongs to the notebook. Foreign or deleted groups make the scope stale.
+func (s *Server) scopeGroupsExist(ctx context.Context, notebookID int64, scope store.RecallScope) (bool, error) {
+	if scope.Kind != store.ScopeGroups {
+		return true, nil
+	}
+	groups, err := s.store.ListWordGroups(ctx, notebookID)
+	if err != nil {
+		return false, err
+	}
+	present := make(map[int64]bool, len(groups))
+	for _, g := range groups {
+		present[g.ID] = true
+	}
+	for _, id := range scope.GroupIDs {
+		if !present[id] {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// changeScopeURL links back to the scope page for a round's current scope.
+func changeScopeURL(notebookID int64, scope store.RecallScope) string {
+	return "/recall/" + strconv.FormatInt(notebookID, 10) + "/start?" + scopeQuery(scope).Encode()
+}
+
+// renderRecallStart shows the scope page with an inline error.
+func (s *Server) renderRecallStart(w http.ResponseWriter, r *http.Request, nb store.Notebook, scope store.RecallScope, errMsg string) {
+	data, ok := s.recallStartView(w, r, nb, scope, errMsg)
+	if !ok {
+		return
+	}
+	if err := s.renderer.page(w, http.StatusOK, "recall_start", data); err != nil {
+		s.fail(w, r, err)
+	}
+}
+
 func (s *Server) handleRecallStartPage(w http.ResponseWriter, r *http.Request) {
 	nb, ok := s.loadRecallNotebook(w, r)
 	if !ok {
@@ -216,11 +261,49 @@ func (s *Server) handleRecallStartPage(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	data, ok := s.recallStartView(w, r, nb, scope, "")
+	s.renderRecallStart(w, r, nb, scope, "")
+}
+
+func (s *Server) handleRecallStartPost(w http.ResponseWriter, r *http.Request) {
+	nb, ok := s.loadRecallNotebook(w, r)
 	if !ok {
 		return
 	}
-	if err := s.renderer.page(w, http.StatusOK, "recall_start", data); err != nil {
-		s.fail(w, r, err)
+	if err := r.ParseForm(); err != nil {
+		s.renderError(w, r, http.StatusBadRequest, "表单格式不对。")
+		return
 	}
+	scope, err := parseRecallScope(r.PostForm)
+	if errors.Is(err, store.ErrInvalidScope) {
+		s.renderError(w, r, http.StatusBadRequest, "范围参数不对。")
+		return
+	}
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	groupsOK, err := s.scopeGroupsExist(r.Context(), nb.ID, scope)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if !groupsOK {
+		s.renderRecallStart(w, r, nb, scope, "分组已经不存在，请重新选择。")
+		return
+	}
+	words, err := s.store.ListRecallWords(r.Context(), nb.ID, scope)
+	if errors.Is(err, store.ErrInvalidScope) {
+		s.renderError(w, r, http.StatusBadRequest, "范围参数不对。")
+		return
+	}
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if len(words) == 0 {
+		s.renderRecallStart(w, r, nb, scope, "这个范围里还没有单词。")
+		return
+	}
+	s.recall.Start(currentUser(r).ID, nb.ID, scope)
+	http.Redirect(w, r, "/recall/"+strconv.FormatInt(nb.ID, 10), http.StatusSeeOther)
 }

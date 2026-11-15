@@ -2,6 +2,7 @@
 <header class="page-head recall-head">
   <div>
     <h1 class="page-title">{{.Notebook.Name}}</h1>
+    <p class="page-subtitle">本轮范围：{{.ScopeLabel}}</p>
     <p class="page-subtitle">只凭记忆，选一个答案。</p>
   </div>
   <form method="post" action="/recall/{{.Notebook.ID}}/end">

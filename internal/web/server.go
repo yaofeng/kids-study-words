@@ -170,6 +170,7 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 
 	mux.HandleFunc("GET /recall", s.handleRecallSelect)
 	mux.HandleFunc("GET /recall/{id}/start", s.handleRecallStartPage)
+	mux.HandleFunc("POST /recall/{id}/start", s.handleRecallStartPost)
 	mux.HandleFunc("GET /recall/{id}", s.handleRecallPage)
 	mux.HandleFunc("POST /recall/{id}/answer", s.handleRecallAnswer)
 	mux.HandleFunc("POST /recall/{id}/next", s.handleRecallNext)
