@@ -125,7 +125,7 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 
 		words, err := cfg.Store.ListWords(ctx, nb.ID, sortKey)
 		if err != nil {
-			return nil, ListWordsOutput{}, err
+			return nil, ListWordsOutput{}, toolError("list_words: list words", err)
 		}
 
 		if in.GroupID != 0 {
@@ -134,14 +134,14 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 				return nil, ListWordsOutput{}, fmt.Errorf("分组不存在")
 			}
 			if err != nil {
-				return nil, ListWordsOutput{}, err
+				return nil, ListWordsOutput{}, toolError("list_words: load group", err)
 			}
 			if g.NotebookID != nb.ID {
 				return nil, ListWordsOutput{}, fmt.Errorf("分组不在这个生词本里")
 			}
 			ids, err := cfg.Store.GroupWordIDs(ctx, userID, g.ID)
 			if err != nil {
-				return nil, ListWordsOutput{}, err
+				return nil, ListWordsOutput{}, toolError("list_words: group word ids", err)
 			}
 			words = filterByGroup(words, ids)
 		}
@@ -190,7 +190,7 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 			return nil, AddWordOutput{}, fmt.Errorf("词典里没有「%s」", word)
 		}
 		if err != nil {
-			return nil, AddWordOutput{}, err
+			return nil, AddWordOutput{}, toolError("add_word: dictionary lookup", err)
 		}
 
 		examples := []store.Example{}
@@ -221,7 +221,7 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 			return nil, AddWordOutput{}, fmt.Errorf("「%s」已在这个生词本里", entry.Word)
 		}
 		if err != nil {
-			return nil, AddWordOutput{}, err
+			return nil, AddWordOutput{}, toolError("add_word: add word", err)
 		}
 		return nil, AddWordOutput{Word: wordInfo(w, nil)}, nil
 	})
@@ -240,7 +240,7 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 			return nil, RemoveWordOutput{}, fmt.Errorf("生词本里没有「%s」", word)
 		}
 		if err != nil {
-			return nil, RemoveWordOutput{}, err
+			return nil, RemoveWordOutput{}, toolError("remove_word: word by text", err)
 		}
 
 		memberships, err := cfg.Store.GroupMemberships(ctx, nb.ID)
@@ -258,7 +258,7 @@ func registerWordTools(s *mcp.Server, cfg Config, userID int64) {
 		}
 
 		if err := cfg.Store.DeleteWord(ctx, nb.ID, w.ID); err != nil {
-			return nil, RemoveWordOutput{}, err
+			return nil, RemoveWordOutput{}, toolError("remove_word: delete word", err)
 		}
 		return nil, out, nil
 	})

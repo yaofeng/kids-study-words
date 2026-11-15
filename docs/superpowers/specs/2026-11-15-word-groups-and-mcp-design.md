@@ -534,7 +534,7 @@ func NewHandler(cfg Config) http.Handler
 mcp.NewServer(&mcp.Implementation{
     Name: "study-words", Version: cfg.Version,
 }, &mcp.ServerOptions{
-    Instructions: "所有操作都作用于当前访问令牌对应的账号。时间按服务器时区。需要学习分析时，请用 query_recall_logs 获取原始记录后自行计算。",
+    Instructions: "所有操作都作用于当前访问令牌对应的账号。除 query_recall_logs 的日期参数（YYYY-MM-DD，按服务器时区解释）外，所有时间字段均为 UTC（RFC3339）。需要学习分析时，请用 query_recall_logs 获取原始记录后自行计算。",
 })
 ```
 
@@ -543,7 +543,7 @@ mcp.NewServer(&mcp.Implementation{
 
 ### 10.5 工具清单
 
-所有工具都只操作当前账号的数据。
+所有工具都只操作当前账号的数据。结构化输出里的时间戳一律是 UTC（RFC3339），只有 `query_recall_logs` 的日期参数 `from`/`to` 按配置的 `TZ` 解释。
 
 #### 生词本
 

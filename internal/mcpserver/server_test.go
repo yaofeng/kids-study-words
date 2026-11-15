@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/modelcontextprotocol/go-sdk/mcp"
-
-	"github.com/yaofeng/kids-study-words/internal/auth"
+	"github.com/yaofeng/kids-study-words/internal/store"
 )
 
 func TestMCPListNotebooks(t *testing.T) {
@@ -41,27 +40,50 @@ func TestMCPRejectsRevokedToken(t *testing.T) {
 
 func TestMCPUserIsolation(t *testing.T) {
 	env := newTestEnv(t)
-	ctx := context.Background()
-	u2, _, _ := env.Store.CreateUser(ctx, "child", "hash", "孩子的本")
-	raw, hash, _ := auth.NewPrefixedToken("mcp_", 32)
-	_, _ = env.Store.ReplaceMCPToken(ctx, u2.ID, hash)
-	sess, err := mcp.NewClient(&mcp.Implementation{Name: "test2", Version: "1"}, nil).
-		Connect(ctx, &mcp.StreamableClientTransport{
-			Endpoint:             env.URL,
-			HTTPClient:           &http.Client{Transport: bearerTransport{base: http.DefaultTransport, token: raw}},
-			DisableStandaloneSSE: true,
-		}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer sess.Close()
-	res, err := sess.CallTool(ctx, &mcp.CallToolParams{Name: "list_notebooks"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	out := decodeOut[ListNotebooksOutput](t, res)
+	other := env.addUser(t, "child", "孩子的本")
+	out := decodeOut[ListNotebooksOutput](t, other.call(t, "list_notebooks", nil))
 	if len(out.Notebooks) != 1 || out.Notebooks[0].Name != "孩子的本" {
 		t.Fatalf("isolation broken: %+v", out)
+	}
+}
+
+func TestMCPCrossAccountToolIsolation(t *testing.T) {
+	env := newTestEnv(t)
+	ctx := context.Background()
+	aWord, err := env.Store.AddWord(ctx, env.Notebook.ID, store.Word{Word: "apple"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	aGroup, err := env.Store.CreateWordGroup(ctx, env.Notebook.ID, "动物")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := env.Store.AnswerWord(ctx, env.Notebook.ID, aWord.ID, true,
+		time.Date(2026, 11, 15, 2, 0, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+
+	other := env.addUser(t, "child", "孩子的本")
+	// 工具加载生词本和分组时都按令牌账号校验，所以用 A 的 ID 调用必须返回
+	// 工具错误，而不是读到 A 的数据。
+	for _, call := range []struct {
+		name string
+		args map[string]any
+	}{
+		{"list_words", map[string]any{"notebook_id": env.Notebook.ID}},
+		{"get_group", map[string]any{"group_id": aGroup.ID}},
+		{"add_group_words", map[string]any{"group_id": aGroup.ID, "words": []string{"apple"}}},
+		{"query_recall_logs", map[string]any{"notebook_id": env.Notebook.ID}},
+		{"query_recall_logs", map[string]any{"group_id": aGroup.ID}},
+	} {
+		if res := other.call(t, call.name, call.args); !res.IsError {
+			t.Errorf("%s must reject another account's IDs", call.name)
+		}
+	}
+	// 不带过滤时也只能看到本账号的记录，A 的记录不可见。
+	out := decodeOut[QueryRecallLogsOutput](t, other.call(t, "query_recall_logs", nil))
+	if out.Total != 0 || len(out.Logs) != 0 {
+		t.Fatalf("cross-account recall logs leaked: %+v", out)
 	}
 }
 

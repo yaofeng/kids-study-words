@@ -121,7 +121,7 @@ func TestRecallRejectsForeignNotebook(t *testing.T) {
 func TestRecallEmptyNotebook(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	body := tc.get("/recall/" + fmt.Sprint(tc.notebook.ID)).Body.String()
-	if !strings.Contains(body, "还没有单词") {
+	if !strings.Contains(body, "这个生词本还没有单词") || strings.Contains(body, "换个范围") {
 		t.Fatalf("body=%s", body)
 	}
 }

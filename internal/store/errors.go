@@ -4,9 +4,10 @@ import "errors"
 
 // Sentinel errors returned by store operations.
 var (
-	ErrNotFound      = errors.New("not found")
-	ErrSetupComplete = errors.New("setup already complete")
-	ErrDuplicate     = errors.New("duplicate")
-	ErrLastNotebook  = errors.New("cannot delete the last notebook")
-	ErrInvalidScope  = errors.New("invalid recall scope")
+	ErrNotFound         = errors.New("not found")
+	ErrSetupComplete    = errors.New("setup already complete")
+	ErrDuplicate        = errors.New("duplicate")
+	ErrLastNotebook     = errors.New("cannot delete the last notebook")
+	ErrInvalidScope     = errors.New("invalid recall scope")
+	ErrInvalidGroupName = errors.New("group name must be 1-40 characters")
 )

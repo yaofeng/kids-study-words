@@ -3,6 +3,7 @@ package mcpserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -30,6 +31,14 @@ type Config struct {
 	Location *time.Location
 	Version  string
 	Now      func() time.Time
+}
+
+// toolError logs an unexpected store or dependency failure and returns a short
+// message safe to show the MCP client. Deliberate validation errors keep their
+// own specific text and must not use this helper.
+func toolError(action string, err error) error {
+	slog.Error(action, "err", err)
+	return fmt.Errorf("操作失败，请稍后重试")
 }
 
 // newServer builds one user's MCP server; every tool closes over userID.

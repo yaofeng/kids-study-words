@@ -100,6 +100,38 @@ func newTestEnvWithLocation(t *testing.T, loc *time.Location) *testEnv {
 	return &testEnv{Store: st, User: u, Notebook: nb, Token: raw, URL: ts.URL, Dict: d, Session: session}
 }
 
+// addUser creates another account with its own notebook and MCP session. The
+// new environment shares this environment's store, dictionary and HTTP handler.
+func (e *testEnv) addUser(t *testing.T, username, notebookName string) *testEnv {
+	t.Helper()
+	ctx := context.Background()
+	u, nb, err := e.Store.CreateUser(ctx, username, "hash", notebookName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, hash, err := auth.NewPrefixedToken("mcp_", 32)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.Store.ReplaceMCPToken(ctx, u.ID, hash); err != nil {
+		t.Fatal(err)
+	}
+	session, err := mcp.NewClient(&mcp.Implementation{Name: "test-" + username, Version: "1"}, nil).
+		Connect(ctx, &mcp.StreamableClientTransport{
+			Endpoint:             e.URL,
+			HTTPClient:           &http.Client{Transport: bearerTransport{base: http.DefaultTransport, token: raw}},
+			DisableStandaloneSSE: true,
+		}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { session.Close() })
+	return &testEnv{
+		Store: e.Store, User: u, Notebook: nb, Token: raw,
+		URL: e.URL, Dict: e.Dict, Session: session,
+	}
+}
+
 func (e *testEnv) call(t *testing.T, name string, args any) *mcp.CallToolResult {
 	t.Helper()
 	res, err := e.Session.CallTool(context.Background(), &mcp.CallToolParams{Name: name, Arguments: args})

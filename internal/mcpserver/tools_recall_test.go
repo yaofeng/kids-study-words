@@ -46,6 +46,74 @@ func TestQueryRecallLogsDateOnlyToIncludesWholeDay(t *testing.T) {
 	}
 }
 
+func TestQueryRecallLogsDateOnlyToCoversDSTDays(t *testing.T) {
+	loc, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Skipf("America/New_York unavailable: %v", err)
+	}
+	local := func(y int, m time.Month, d, hh, mm int) time.Time {
+		return time.Date(y, m, d, hh, mm, 0, 0, loc)
+	}
+	cases := []struct {
+		name      string
+		date      string
+		events    []time.Time
+		wantKnown []bool
+	}{
+		{
+			// 2026-03-08 春季调时：凌晨 2 点直接跳到 3 点。
+			name: "spring forward",
+			date: "2026-03-08",
+			events: []time.Time{
+				local(2026, 3, 8, 1, 30),  // 当天，调时前（EST）
+				local(2026, 3, 8, 3, 30),  // 当天，调时后（EDT）
+				local(2026, 3, 7, 23, 30), // 前一天
+				local(2026, 3, 9, 0, 30),  // 后一天凌晨
+			},
+			wantKnown: []bool{true, false},
+		},
+		{
+			// 2026-11-01 秋季调时：凌晨 2 点回拨到 1 点。
+			name: "fall back",
+			date: "2026-11-01",
+			events: []time.Time{
+				local(2026, 11, 1, 0, 30),  // 当天，调时前（EDT）
+				local(2026, 11, 1, 23, 30), // 当天，调时后（EST）
+				local(2026, 10, 31, 23, 30),
+				local(2026, 11, 2, 0, 30),
+			},
+			wantKnown: []bool{true, false},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			env := newTestEnvWithLocation(t, loc)
+			ctx := context.Background()
+			w, err := env.Store.AddWord(ctx, env.Notebook.ID, store.Word{Word: "apple"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			knowns := []bool{true, false, true, true}
+			for i, at := range c.events {
+				if _, _, err := env.Store.AnswerWord(ctx, env.Notebook.ID, w.ID, knowns[i], at); err != nil {
+					t.Fatal(err)
+				}
+			}
+			out := decodeOut[QueryRecallLogsOutput](t, env.call(t, "query_recall_logs", map[string]any{
+				"from": c.date, "to": c.date, "order": "asc",
+			}))
+			if out.Total != 2 || len(out.Logs) != 2 {
+				t.Fatalf("date range should cover exactly that local day: %+v", out)
+			}
+			for i, want := range c.wantKnown {
+				if out.Logs[i].Known != want {
+					t.Fatalf("log %d known=%v want=%v: %+v", i, out.Logs[i].Known, want, out)
+				}
+			}
+		})
+	}
+}
+
 func TestQueryRecallLogsClampsLimitAndOffset(t *testing.T) {
 	env := newTestEnv(t)
 	ctx := context.Background()

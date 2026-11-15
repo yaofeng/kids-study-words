@@ -73,6 +73,22 @@ func TestRecallStartRejectsForeignGroup(t *testing.T) {
 	}
 }
 
+func TestRecallStartGroupsWithoutSelectionShowsInlineError(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
+	if _, err := tc.store.CreateWordGroup(context.Background(), tc.notebook.ID, "动物"); err != nil {
+		t.Fatal(err)
+	}
+	resp := tc.postForm(fmt.Sprintf("/recall/%d/start", tc.notebook.ID), url.Values{"scope": {"groups"}})
+	body := resp.Body.String()
+	if resp.Code != http.StatusOK || !strings.Contains(body, "请至少选择一个分组") {
+		t.Fatalf("code=%d body=%s", resp.Code, body)
+	}
+	if !strings.Contains(body, "动物") {
+		t.Fatalf("groups should be listed for retry: %s", body)
+	}
+}
+
 func TestRecallStartEmptyScopeDoesNotStart(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	tc.seedWord(tc.notebook.ID, "apple", "n. 苹果") // 熟练度 5

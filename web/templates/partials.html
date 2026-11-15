@@ -161,6 +161,11 @@
             hx-vals='{"word_id":"{{.Word.ID}}","known":"1"}'
             hx-target="#recall-card" hx-swap="outerHTML">认识</button>
   </div>
+  {{else if .NotebookEmpty}}
+  <p class="empty-recall">这个生词本还没有单词。</p>
+  <div class="detail-actions center-actions">
+    <a class="btn btn-primary" href="/lookup">去查词</a>
+  </div>
   {{else}}
   <p class="empty-recall">这个范围里还没有单词。</p>
   <div class="detail-actions center-actions">

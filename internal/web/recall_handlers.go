@@ -21,6 +21,9 @@ type recallView struct {
 	Log            *store.RecallLog
 	ScopeLabel     string
 	ChangeScopeURL string
+	// NotebookEmpty distinguishes a notebook with no words at all from a
+	// non-empty notebook whose selected scope happens to be empty.
+	NotebookEmpty bool
 }
 
 // summaryData feeds the end-of-round summary.
@@ -108,6 +111,7 @@ func (s *Server) handleRecallPage(w http.ResponseWriter, r *http.Request) {
 		State:          state,
 		ScopeLabel:     scopeLabel(state.Scope, groups),
 		ChangeScopeURL: changeScopeURL(nb.ID, state.Scope),
+		NotebookEmpty:  nb.WordCount == 0,
 	})
 }
 
@@ -181,6 +185,7 @@ func (s *Server) handleRecallNext(w http.ResponseWriter, r *http.Request) {
 		Word:           word,
 		State:          state,
 		ChangeScopeURL: changeScopeURL(nb.ID, state.Scope),
+		NotebookEmpty:  nb.WordCount == 0,
 	})
 }
 
@@ -226,10 +231,14 @@ func (s *Server) handleRecallSummary(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	groups, err := s.store.ListWordGroups(r.Context(), nb.ID)
-	if err != nil {
-		s.fail(w, r, err)
-		return
+	// scopeLabel only needs group names for a group scope.
+	var groups []store.WordGroup
+	if scope.Kind == store.ScopeGroups {
+		groups, err = s.store.ListWordGroups(r.Context(), nb.ID)
+		if err != nil {
+			s.fail(w, r, err)
+			return
+		}
 	}
 	base, ok := s.pageData(w, r, "本轮小结", "recall")
 	if !ok {

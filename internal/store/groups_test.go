@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -60,6 +61,33 @@ func TestWordGroupCRUD(t *testing.T) {
 	}
 	if _, err := st.WordGroupByID(ctx, u.ID, g.ID); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("after delete: %v", err)
+	}
+}
+
+func TestWordGroupNameLengthGuard(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	g, err := st.CreateWordGroup(ctx, nb.ID, "动物")
+	if err != nil {
+		t.Fatal(err)
+	}
+	blank := "   "
+	tooLong := strings.Repeat("字", 41)
+	if _, err := st.CreateWordGroup(ctx, nb.ID, blank); !errors.Is(err, ErrInvalidGroupName) {
+		t.Fatalf("blank create: %v", err)
+	}
+	if _, err := st.CreateWordGroup(ctx, nb.ID, tooLong); !errors.Is(err, ErrInvalidGroupName) {
+		t.Fatalf("long create: %v", err)
+	}
+	if _, err := st.RenameWordGroup(ctx, u.ID, g.ID, blank); !errors.Is(err, ErrInvalidGroupName) {
+		t.Fatalf("blank rename: %v", err)
+	}
+	if _, err := st.RenameWordGroup(ctx, u.ID, g.ID, tooLong); !errors.Is(err, ErrInvalidGroupName) {
+		t.Fatalf("long rename: %v", err)
+	}
+	if _, err := st.CreateWordGroup(ctx, nb.ID, strings.Repeat("字", 40)); err != nil {
+		t.Fatalf("40 runes should be valid: %v", err)
 	}
 }
 

@@ -49,7 +49,7 @@ func registerNotebookTools(s *mcp.Server, cfg Config, userID int64) {
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, ListNotebooksOutput, error) {
 		nbs, err := cfg.Store.ListNotebooks(ctx, userID)
 		if err != nil {
-			return nil, ListNotebooksOutput{}, err
+			return nil, ListNotebooksOutput{}, toolError("list_notebooks", err)
 		}
 		out := ListNotebooksOutput{Notebooks: make([]NotebookInfo, 0, len(nbs))}
 		for _, nb := range nbs {
@@ -71,7 +71,7 @@ func registerNotebookTools(s *mcp.Server, cfg Config, userID int64) {
 			return nil, NotebookOutput{}, fmt.Errorf("已经有同名的生词本了")
 		}
 		if err != nil {
-			return nil, NotebookOutput{}, err
+			return nil, NotebookOutput{}, toolError("create_notebook", err)
 		}
 		return nil, NotebookOutput{Notebook: notebookInfo(nb)}, nil
 	})
@@ -92,7 +92,7 @@ func registerNotebookTools(s *mcp.Server, cfg Config, userID int64) {
 			return nil, NotebookOutput{}, fmt.Errorf("已经有同名的生词本了")
 		}
 		if err != nil {
-			return nil, NotebookOutput{}, err
+			return nil, NotebookOutput{}, toolError("rename_notebook", err)
 		}
 		return nil, NotebookOutput{Notebook: notebookInfo(nb)}, nil
 	})

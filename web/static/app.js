@@ -118,8 +118,13 @@ document.addEventListener('click', async (event) => {
   } catch {
     input.focus();
     input.select();
-    document.execCommand('copy');
-    btn.textContent = '已复制';
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch {
+      copied = false;
+    }
+    btn.textContent = copied ? '已复制' : '复制失败，请手动选择';
   }
 });
 

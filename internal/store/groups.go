@@ -2,11 +2,11 @@ package store
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // WordGroup is a named collection of words inside a notebook.
@@ -66,11 +66,21 @@ func (s *Store) WordGroupByID(ctx context.Context, userID, groupID int64) (WordG
 	return scanWordGroup(row)
 }
 
+// validGroupName trims a name and enforces the store-level 1–40 rune rule.
+// Callers validate too; this guards the data layer against future callers.
+func validGroupName(raw string) (string, error) {
+	name := strings.TrimSpace(raw)
+	if n := utf8.RuneCountInString(name); n < 1 || n > 40 {
+		return "", ErrInvalidGroupName
+	}
+	return name, nil
+}
+
 // CreateWordGroup adds a group to a notebook.
 func (s *Store) CreateWordGroup(ctx context.Context, notebookID int64, name string) (WordGroup, error) {
-	name = strings.TrimSpace(name)
-	if name == "" {
-		return WordGroup{}, errors.New("group name is required")
+	name, err := validGroupName(name)
+	if err != nil {
+		return WordGroup{}, err
 	}
 	now := TimeNow()
 	res, err := s.db.ExecContext(ctx,
@@ -91,9 +101,9 @@ func (s *Store) CreateWordGroup(ctx context.Context, notebookID int64, name stri
 
 // RenameWordGroup renames a group the user owns.
 func (s *Store) RenameWordGroup(ctx context.Context, userID, groupID int64, name string) (WordGroup, error) {
-	name = strings.TrimSpace(name)
-	if name == "" {
-		return WordGroup{}, errors.New("group name is required")
+	name, err := validGroupName(name)
+	if err != nil {
+		return WordGroup{}, err
 	}
 	if _, err := s.WordGroupByID(ctx, userID, groupID); err != nil {
 		return WordGroup{}, err

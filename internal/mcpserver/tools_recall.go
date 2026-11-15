@@ -80,7 +80,9 @@ func parseTimeBound(raw string, loc *time.Location, endOfDay bool) (*time.Time, 
 	}
 	if t, err := time.ParseInLocation("2006-01-02", raw, loc); err == nil {
 		if endOfDay {
-			t = t.Add(24 * time.Hour).Add(-time.Nanosecond)
+			// AddDate advances by one local calendar day, so the bound stays at
+			// the next local midnight across DST transitions.
+			t = t.AddDate(0, 0, 1).Add(-time.Nanosecond)
 		}
 		u := t.UTC()
 		return &u, nil

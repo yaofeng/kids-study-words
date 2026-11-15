@@ -80,6 +80,13 @@ func parseRecallScope(v url.Values) (store.RecallScope, error) {
 	}
 }
 
+// groupsScopeWithoutSelection reports the specific user mistake of choosing the
+// groups scope without checking any group. Genuinely malformed input (unknown
+// scope, invalid group ids) is not reported here.
+func groupsScopeWithoutSelection(v url.Values) bool {
+	return strings.TrimSpace(v.Get("scope")) == "groups" && len(v["group_id"]) == 0
+}
+
 // scopeQuery encodes a scope for recall links, sorting group ids first.
 func scopeQuery(scope store.RecallScope) url.Values {
 	v := url.Values{}
@@ -275,6 +282,10 @@ func (s *Server) handleRecallStartPost(w http.ResponseWriter, r *http.Request) {
 	}
 	scope, err := parseRecallScope(r.PostForm)
 	if errors.Is(err, store.ErrInvalidScope) {
+		if groupsScopeWithoutSelection(r.PostForm) {
+			s.renderRecallStart(w, r, nb, store.RecallScope{Kind: store.ScopeGroups}, "请至少选择一个分组。")
+			return
+		}
 		s.renderError(w, r, http.StatusBadRequest, "范围参数不对。")
 		return
 	}
