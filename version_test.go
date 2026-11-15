@@ -40,6 +40,9 @@ func TestVersionLiteralOnlyInDotVersion(t *testing.T) {
 	}
 	skipExts := map[string]bool{
 		".png": true, ".jpg": true, ".woff2": true, ".db": true, ".sqlite": true,
+		// go.mod and go.sum carry dependency versions, not this app's
+		// release number; a dependency may legitimately share it.
+		".mod": true, ".sum": true,
 	}
 	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
