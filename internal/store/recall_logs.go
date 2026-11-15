@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 )
@@ -32,8 +31,7 @@ func (s *Store) ListRecallLogs(ctx context.Context, userID int64, notebookID *in
 		limit = 500
 	}
 
-	query := `SELECT id, user_id, notebook_id, notebook_name, word_id, word, known,
-	                 proficiency_after, review_count, reviewed_at
+	query := `SELECT ` + recallLogColumns + `
 	          FROM recall_logs WHERE user_id = ?`
 	args := []any{userID}
 	if notebookID != nil {
@@ -55,25 +53,8 @@ func (s *Store) ListRecallLogs(ctx context.Context, userID int64, notebookID *in
 
 	var out []RecallLog
 	for rows.Next() {
-		var l RecallLog
-		var notebook sql.NullInt64
-		var wordID sql.NullInt64
-		var known int
-		var reviewed string
-		if err := rows.Scan(&l.ID, &l.UserID, &notebook, &l.NotebookName, &wordID, &l.Word,
-			&known, &l.ProficiencyAfter, &l.ReviewCount, &reviewed); err != nil {
-			return nil, fmt.Errorf("scan recall log: %w", err)
-		}
-		if notebook.Valid {
-			id := notebook.Int64
-			l.NotebookID = &id
-		}
-		if wordID.Valid {
-			id := wordID.Int64
-			l.WordID = &id
-		}
-		l.Known = known == 1
-		if err := scanTime(&l.ReviewedAt, reviewed); err != nil {
+		l, err := scanRecallLog(rows)
+		if err != nil {
 			return nil, err
 		}
 		out = append(out, l)

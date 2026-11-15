@@ -22,8 +22,8 @@ type QueryRecallLogsInput struct {
 	Known          *bool  `json:"known,omitempty" jsonschema:"true 只看认识，false 只看不认识，省略表示都要"`
 	ProficiencyMin int    `json:"proficiency_min,omitempty" jsonschema:"答后熟练度下限 1-10"`
 	ProficiencyMax int    `json:"proficiency_max,omitempty" jsonschema:"答后熟练度上限 1-10"`
-	ReviewCountMin int    `json:"review_count_min,omitempty"`
-	ReviewCountMax int    `json:"review_count_max,omitempty"`
+	ReviewCountMin int    `json:"review_count_min,omitempty" jsonschema:"复习次数下限，0 或不填表示不限制"`
+	ReviewCountMax int    `json:"review_count_max,omitempty" jsonschema:"复习次数上限，0 或不填表示不限制"`
 	Order          string `json:"order,omitempty" jsonschema:"desc（默认）或 asc"`
 	Limit          int    `json:"limit,omitempty" jsonschema:"默认 200，最大 1000"`
 	Offset         int    `json:"offset,omitempty"`
@@ -100,7 +100,8 @@ func registerRecallTools(s *mcp.Server, cfg Config, userID int64) {
 		Description: "查询原始回忆记录（每次答题一条），不做任何分析或汇总；需要统计时请取回记录后自行计算。" +
 			"from/to 接受 YYYY-MM-DD（按服务器时区解释，to 包含当天整天）或 RFC3339；" +
 			"known 省略表示认识与不认识都要；group_id 按单词当前所属分组成员过滤；" +
-			"reviewed_at 始终以 UTC 返回。默认按 reviewed_at 与 id 倒序，最多返回 1000 条。",
+			"复习次数上下限填 0 或省略表示不限制；" +
+			"reviewed_at 始终以 UTC 返回。默认按 reviewed_at 与 id 倒序，默认每页 200 条、最多 1000 条。",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in QueryRecallLogsInput) (*mcp.CallToolResult, QueryRecallLogsOutput, error) {
 		from, err := parseTimeBound(in.From, cfg.Location, false)
 		if err != nil {
