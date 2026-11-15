@@ -64,3 +64,23 @@ CREATE TABLE IF NOT EXISTS ai_example_cache (
   model      TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS word_groups (
+  id          INTEGER PRIMARY KEY,
+  notebook_id INTEGER NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  UNIQUE (notebook_id, name COLLATE NOCASE)
+);
+
+CREATE INDEX IF NOT EXISTS word_groups_notebook
+  ON word_groups(notebook_id, name COLLATE NOCASE);
+
+CREATE TABLE IF NOT EXISTS word_group_members (
+  group_id INTEGER NOT NULL REFERENCES word_groups(id) ON DELETE CASCADE,
+  word_id  INTEGER NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+  PRIMARY KEY (group_id, word_id)
+);
+
+CREATE INDEX IF NOT EXISTS word_group_members_word
+  ON word_group_members(word_id);
