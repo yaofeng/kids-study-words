@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"slices"
 	"testing"
 	"time"
 )
@@ -30,7 +31,7 @@ func TestExportAllIncludesWordsAndLogs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f.Format != "study-words" || f.Version != 1 || f.ExportedAt.IsZero() {
+	if f.Format != "study-words" || f.Version != 2 || f.ExportedAt.IsZero() {
 		t.Fatalf("header=%+v", f)
 	}
 	if len(f.Notebooks) != 2 {
@@ -44,6 +45,40 @@ func TestExportAllIncludesWordsAndLogs(t *testing.T) {
 	}
 	if len(f.RecallLogs) != 1 || f.RecallLogs[0].Word != "apple" || !f.RecallLogs[0].Known {
 		t.Fatalf("logs=%+v", f.RecallLogs)
+	}
+}
+
+func TestExportIncludesGroups(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	apple, _ := st.AddWord(ctx, nb.ID, Word{Word: "apple"})
+	pear, _ := st.AddWord(ctx, nb.ID, Word{Word: "pear"})
+	g, _ := st.CreateWordGroup(ctx, nb.ID, "动物")
+	_ = st.SetGroupWords(ctx, u.ID, g.ID, []int64{pear.ID, apple.ID})
+	if _, err := st.CreateWordGroup(ctx, nb.ID, "空组"); err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := st.ExportAll(ctx, u.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.Version != 2 {
+		t.Fatalf("version=%d", f.Version)
+	}
+	if len(f.Notebooks[0].Groups) != 2 {
+		t.Fatalf("groups=%+v", f.Notebooks[0].Groups)
+	}
+	byName := map[string]ExportGroup{}
+	for _, g := range f.Notebooks[0].Groups {
+		byName[g.Name] = g
+	}
+	if !slices.Equal(byName["动物"].Words, []string{"apple", "pear"}) {
+		t.Fatalf("animal words=%v", byName["动物"].Words)
+	}
+	if byName["空组"].Words == nil || len(byName["空组"].Words) != 0 {
+		t.Fatalf("empty group=%+v", byName["空组"])
 	}
 }
 

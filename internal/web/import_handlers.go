@@ -86,6 +86,12 @@ func importSummary(stats store.ImportStats, mode store.ImportMode) string {
 	if stats.WordsUpdated > 0 {
 		parts = append(parts, fmt.Sprintf("更新 %d 个单词", stats.WordsUpdated))
 	}
+	if stats.GroupsCreated > 0 {
+		parts = append(parts, fmt.Sprintf("新建 %d 个分组", stats.GroupsCreated))
+	}
+	if stats.GroupMembershipsAdded > 0 {
+		parts = append(parts, fmt.Sprintf("恢复 %d 个分组词", stats.GroupMembershipsAdded))
+	}
 	if stats.LogsAdded > 0 {
 		parts = append(parts, fmt.Sprintf("恢复 %d 条回忆记录", stats.LogsAdded))
 	}

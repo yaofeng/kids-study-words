@@ -38,7 +38,7 @@
 
 <section class="card settings-section">
   <h2 class="settings-title">导出数据</h2>
-  <p class="muted-text">导出文件包含生词本、单词、例句、熟练度和回忆记录，是普通 JSON 文件。</p>
+  <p class="muted-text">导出文件包含生词本、分组、单词、例句、熟练度和回忆记录，是普通 JSON 文件。</p>
   <div class="settings-actions">
     <a class="btn btn-primary" href="/export" download>导出全部</a>
   </div>
@@ -68,16 +68,16 @@
       </label>
       <label class="choice">
         <input type="radio" name="mode" value="overwrite">
-        <span><strong>覆盖</strong>：先删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词和全部回忆记录，再完整导入。</span>
+        <span><strong>覆盖</strong>：先删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词、全部分组和全部回忆记录，再完整导入。</span>
       </label>
     </fieldset>
 
     <label class="choice">
       <input type="checkbox" name="confirm" value="yes">
-      <span>我确认覆盖导入会删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词和全部回忆记录</span>
+      <span>我确认覆盖导入会删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词、全部分组和全部回忆记录</span>
     </label>
 
-    <button class="btn btn-primary" type="submit" data-confirm="覆盖导入会删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词和全部回忆记录；合并导入只会补充数据。确定继续吗？">开始导入</button>
+    <button class="btn btn-primary" type="submit" data-confirm="覆盖导入会删除现有的 {{.NotebookCount}} 个生词本、{{.WordCount}} 个单词、全部分组和全部回忆记录；合并导入只会补充数据。确定继续吗？">开始导入</button>
   </form>
 </section>
 

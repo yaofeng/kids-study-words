@@ -3,12 +3,13 @@ package store
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 )
 
 const (
 	exportFormat  = "study-words"
-	exportVersion = 1
+	exportVersion = 2
 )
 
 // ExportFile is the JSON document exchanged by export and import.
@@ -22,9 +23,17 @@ type ExportFile struct {
 
 // ExportNotebook is one notebook in an export file.
 type ExportNotebook struct {
-	Name      string       `json:"name"`
-	IsDefault bool         `json:"is_default"`
-	Words     []ExportWord `json:"words"`
+	Name      string        `json:"name"`
+	IsDefault bool          `json:"is_default"`
+	Words     []ExportWord  `json:"words"`
+	Groups    []ExportGroup `json:"groups"`
+}
+
+// ExportGroup is one word group in an export file. Words are the group's word
+// spellings, sorted, and are always present (an empty group has words: []).
+type ExportGroup struct {
+	Name  string   `json:"name"`
+	Words []string `json:"words"`
 }
 
 // ExportWord is one vocabulary item in an export file.
@@ -102,6 +111,30 @@ func (s *Store) export(ctx context.Context, userID int64, only *int64) (ExportFi
 				LastReviewedAt: w.LastReviewedAt,
 				ReviewCount:    w.ReviewCount,
 			})
+		}
+
+		groups, err := s.ListWordGroups(ctx, nb.ID)
+		if err != nil {
+			return ExportFile{}, err
+		}
+		memberships, err := s.GroupMemberships(ctx, nb.ID)
+		if err != nil {
+			return ExportFile{}, err
+		}
+		byGroup := map[int64][]string{}
+		for _, w := range words {
+			for _, g := range memberships[w.ID] {
+				byGroup[g.ID] = append(byGroup[g.ID], w.Word)
+			}
+		}
+		en.Groups = make([]ExportGroup, 0, len(groups))
+		for _, g := range groups {
+			names := byGroup[g.ID]
+			if names == nil {
+				names = []string{}
+			}
+			slices.Sort(names)
+			en.Groups = append(en.Groups, ExportGroup{Name: g.Name, Words: names})
 		}
 		f.Notebooks = append(f.Notebooks, en)
 	}

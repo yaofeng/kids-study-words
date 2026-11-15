@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -49,7 +50,7 @@ func sampleExport(t *testing.T, notebooks ...string) []byte {
 	t.Helper()
 	f := store.ExportFile{
 		Format:     "study-words",
-		Version:    1,
+		Version:    2,
 		ExportedAt: time.Now().UTC(),
 		Notebooks:  []store.ExportNotebook{},
 	}
@@ -65,6 +66,51 @@ func sampleExport(t *testing.T, notebooks ...string) []byte {
 		t.Fatal(err)
 	}
 	return b
+}
+
+func TestImportV2GroupsRestoresGroupsAndSummarizes(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	doc := store.ExportFile{
+		Format:  "study-words",
+		Version: 2,
+		Notebooks: []store.ExportNotebook{{
+			Name:   "动物",
+			Words:  []store.ExportWord{{Word: "apple", Proficiency: 5}, {Word: "pear", Proficiency: 5}},
+			Groups: []store.ExportGroup{{Name: "水果", Words: []string{"apple"}}},
+		}},
+	}
+	body, err := json.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := tc.postImport(t, body, "merge", "")
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("code=%d body=%s", rec.Code, rec.Body)
+	}
+
+	settings := tc.get("/settings").Body.String()
+	if !strings.Contains(settings, "新建 1 个分组") || !strings.Contains(settings, "恢复 1 个分组词") {
+		t.Fatalf("import summary missing groups: %s", settings)
+	}
+
+	rec = tc.get("/export")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("export code=%d", rec.Code)
+	}
+	var f store.ExportFile
+	if err := json.Unmarshal(rec.Body.Bytes(), &f); err != nil {
+		t.Fatal(err)
+	}
+	var animal *store.ExportNotebook
+	for i := range f.Notebooks {
+		if f.Notebooks[i].Name == "动物" {
+			animal = &f.Notebooks[i]
+		}
+	}
+	if animal == nil || len(animal.Groups) != 1 || animal.Groups[0].Name != "水果" ||
+		!slices.Equal(animal.Groups[0].Words, []string{"apple"}) {
+		t.Fatalf("exported groups=%+v", animal)
+	}
 }
 
 func TestSettingsPageShowsDataSection(t *testing.T) {

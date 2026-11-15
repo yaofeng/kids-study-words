@@ -23,11 +23,13 @@ const (
 
 // ImportStats summarises what an import changed.
 type ImportStats struct {
-	NotebooksCreated int
-	WordsCreated     int
-	WordsUpdated     int
-	WordsSkipped     int
-	LogsAdded        int
+	NotebooksCreated      int
+	WordsCreated          int
+	WordsUpdated          int
+	WordsSkipped          int
+	LogsAdded             int
+	GroupsCreated         int
+	GroupMembershipsAdded int
 }
 
 // ValidateExport checks the document before any transaction starts.
@@ -35,7 +37,7 @@ func ValidateExport(f ExportFile) error {
 	if f.Format != exportFormat {
 		return fmt.Errorf("不是少儿背单词的导出文件（format=%q）", f.Format)
 	}
-	if f.Version != exportVersion {
+	if f.Version != 1 && f.Version != 2 {
 		return fmt.Errorf("不支持的导出文件版本 %d", f.Version)
 	}
 	if len(f.Notebooks) == 0 {
@@ -74,6 +76,11 @@ func ValidateExport(f ExportFile) error {
 				}
 			}
 		}
+		if f.Version >= 2 {
+			if err := validateGroups(nb); err != nil {
+				return err
+			}
+		}
 	}
 	for _, l := range f.RecallLogs {
 		word := strings.TrimSpace(l.Word)
@@ -96,6 +103,48 @@ func ValidateExport(f ExportFile) error {
 	return nil
 }
 
+// validateGroups checks the group section of a version 2 notebook.
+func validateGroups(nb ExportNotebook) error {
+	if len(nb.Groups) > 100 {
+		return fmt.Errorf("生词本「%s」的分组超过 100 个", nb.Name)
+	}
+	wordSet := make(map[string]bool, len(nb.Words))
+	for _, w := range nb.Words {
+		wordSet[strings.ToLower(strings.TrimSpace(w.Word))] = true
+	}
+	groupNames := make(map[string]bool, len(nb.Groups))
+	for _, g := range nb.Groups {
+		name := strings.TrimSpace(g.Name)
+		if n := utf8.RuneCountInString(name); n == 0 || n > 40 {
+			return fmt.Errorf("分组名称需为 1–40 个字符：%q", g.Name)
+		}
+		key := strings.ToLower(name)
+		if groupNames[key] {
+			return fmt.Errorf("生词本「%s」有重名分组：%q", nb.Name, name)
+		}
+		groupNames[key] = true
+		if len(g.Words) > 10000 {
+			return fmt.Errorf("分组「%s」的单词超过 10000 个", name)
+		}
+		seen := make(map[string]bool, len(g.Words))
+		for _, w := range g.Words {
+			word := strings.TrimSpace(w)
+			if n := utf8.RuneCountInString(word); n == 0 || n > 100 {
+				return fmt.Errorf("分组「%s」的单词需为 1–100 个字符：%q", name, w)
+			}
+			wkey := strings.ToLower(word)
+			if !wordSet[wkey] {
+				return fmt.Errorf("分组「%s」的单词不在生词本中：%q", name, w)
+			}
+			if seen[wkey] {
+				return fmt.Errorf("分组「%s」有重复单词：%q", name, w)
+			}
+			seen[wkey] = true
+		}
+	}
+	return nil
+}
+
 // Import writes a validated export file in one transaction.
 func (s *Store) Import(ctx context.Context, userID int64, f ExportFile, mode ImportMode) (ImportStats, error) {
 	var stats ImportStats
@@ -110,6 +159,7 @@ func (s *Store) Import(ctx context.Context, userID int64, f ExportFile, mode Imp
 	defer tx.Rollback()
 
 	if mode == ImportOverwrite {
+		// Deleting notebooks cascades to their words, groups, and members.
 		if _, err := tx.ExecContext(ctx, `DELETE FROM recall_logs WHERE user_id = ?`, userID); err != nil {
 			return stats, fmt.Errorf("clear logs: %w", err)
 		}
@@ -164,6 +214,11 @@ func (s *Store) Import(ctx context.Context, userID int64, f ExportFile, mode Imp
 				stats.WordsUpdated++
 			case wordSkipped:
 				stats.WordsSkipped++
+			}
+		}
+		if f.Version >= 2 && len(nb.Groups) > 0 {
+			if err := importGroups(ctx, tx, id, nb.Groups, &stats); err != nil {
+				return stats, err
 			}
 		}
 	}
@@ -361,6 +416,90 @@ func importWord(ctx context.Context, tx *sql.Tx, notebookID int64, w ExportWord)
 		return wordSkipped, fmt.Errorf("update word %q: %w", word, err)
 	}
 	return wordUpdated, nil
+}
+
+// importGroups creates or reuses groups in one notebook and adds their members.
+// It runs inside the import transaction, so it only uses tx (the pool is capped
+// at one connection). Validation has already checked that every group word
+// exists in the notebook.
+func importGroups(ctx context.Context, tx *sql.Tx, notebookID int64, groups []ExportGroup, stats *ImportStats) error {
+	wordIDs := map[string]int64{}
+	rows, err := tx.QueryContext(ctx, `SELECT id, word FROM words WHERE notebook_id = ?`, notebookID)
+	if err != nil {
+		return fmt.Errorf("load import words: %w", err)
+	}
+	for rows.Next() {
+		var id int64
+		var word string
+		if err := rows.Scan(&id, &word); err != nil {
+			rows.Close()
+			return err
+		}
+		wordIDs[strings.ToLower(strings.TrimSpace(word))] = id
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	groupIDs := map[string]int64{}
+	rows, err = tx.QueryContext(ctx, `SELECT id, name FROM word_groups WHERE notebook_id = ?`, notebookID)
+	if err != nil {
+		return fmt.Errorf("load import groups: %w", err)
+	}
+	for rows.Next() {
+		var id int64
+		var name string
+		if err := rows.Scan(&id, &name); err != nil {
+			rows.Close()
+			return err
+		}
+		groupIDs[strings.ToLower(strings.TrimSpace(name))] = id
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	for _, g := range groups {
+		name := strings.TrimSpace(g.Name)
+		key := strings.ToLower(name)
+		groupID, ok := groupIDs[key]
+		if !ok {
+			res, err := tx.ExecContext(ctx,
+				`INSERT INTO word_groups (notebook_id, name, created_at) VALUES (?, ?, ?)`,
+				notebookID, name, formatTime(TimeNow()))
+			if err != nil {
+				return fmt.Errorf("create group %q: %w", name, err)
+			}
+			groupID, err = res.LastInsertId()
+			if err != nil {
+				return fmt.Errorf("group id: %w", err)
+			}
+			groupIDs[key] = groupID
+			stats.GroupsCreated++
+		}
+		for _, w := range g.Words {
+			wordID, ok := wordIDs[strings.ToLower(strings.TrimSpace(w))]
+			if !ok {
+				return fmt.Errorf("分组「%s」的单词不在生词本中：%q", name, w)
+			}
+			res, err := tx.ExecContext(ctx,
+				`INSERT OR IGNORE INTO word_group_members (group_id, word_id) VALUES (?, ?)`,
+				groupID, wordID)
+			if err != nil {
+				return fmt.Errorf("add group member: %w", err)
+			}
+			n, err := res.RowsAffected()
+			if err != nil {
+				return fmt.Errorf("add group member: %w", err)
+			}
+			if n > 0 {
+				stats.GroupMembershipsAdded++
+			}
+		}
+	}
+	return nil
 }
 
 func logKey(word string, reviewedAt time.Time, known bool) string {

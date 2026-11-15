@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -239,10 +240,147 @@ func TestImportOverwriteClearsExistingData(t *testing.T) {
 	}
 }
 
+func TestImportOverwriteCascadesExistingGroups(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	apple, _ := st.AddWord(ctx, nb.ID, Word{Word: "apple"})
+	g, _ := st.CreateWordGroup(ctx, nb.ID, "旧组")
+	_ = st.SetGroupWords(ctx, u.ID, g.ID, []int64{apple.ID})
+
+	f := ExportFile{Format: "study-words", Version: 2, Notebooks: []ExportNotebook{{
+		Name:  "全新",
+		Words: []ExportWord{{Word: "new", Proficiency: 5}},
+	}}}
+	stats, err := st.Import(ctx, u.ID, f, ImportOverwrite)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.GroupsCreated != 0 || stats.GroupMembershipsAdded != 0 {
+		t.Fatalf("stats=%+v", stats)
+	}
+	var groups, members int
+	if err := st.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM word_groups`).Scan(&groups); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM word_group_members`).Scan(&members); err != nil {
+		t.Fatal(err)
+	}
+	if groups != 0 || members != 0 {
+		t.Fatalf("old groups survived overwrite: groups=%d members=%d", groups, members)
+	}
+}
+
+func TestImportV2GroupsRoundTrip(t *testing.T) {
+	src := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := src.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	apple, _ := src.AddWord(ctx, nb.ID, Word{Word: "apple"})
+	g, _ := src.CreateWordGroup(ctx, nb.ID, "动物")
+	_ = src.SetGroupWords(ctx, u.ID, g.ID, []int64{apple.ID})
+	f, err := src.ExportAll(ctx, u.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dst := newTestStore(t)
+	u2, _, _ := dst.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	stats, err := dst.Import(ctx, u2.ID, f, ImportOverwrite)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.GroupsCreated != 1 || stats.GroupMembershipsAdded != 1 {
+		t.Fatalf("stats=%+v", stats)
+	}
+	nbs, _ := dst.ListNotebooks(ctx, u2.ID)
+	if len(nbs) != 1 {
+		t.Fatalf("notebooks=%+v", nbs)
+	}
+	groups, _ := dst.ListWordGroups(ctx, nbs[0].ID)
+	if len(groups) != 1 || groups[0].Name != "动物" || groups[0].WordCount != 1 {
+		t.Fatalf("groups=%+v", groups)
+	}
+}
+
+func TestImportMergeUnionsGroupMembers(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	apple, _ := st.AddWord(ctx, nb.ID, Word{Word: "apple"})
+	pear, _ := st.AddWord(ctx, nb.ID, Word{Word: "pear"})
+	g, _ := st.CreateWordGroup(ctx, nb.ID, "动物")
+	_ = st.SetGroupWords(ctx, u.ID, g.ID, []int64{pear.ID})
+
+	f := ExportFile{Format: "study-words", Version: 2, Notebooks: []ExportNotebook{{
+		Name:   nb.Name,
+		Words:  []ExportWord{{Word: "apple", Proficiency: 5}},
+		Groups: []ExportGroup{{Name: "动物", Words: []string{"apple"}}},
+	}}}
+	stats, err := st.Import(ctx, u.ID, f, ImportMerge)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.GroupsCreated != 0 || stats.GroupMembershipsAdded != 1 {
+		t.Fatalf("stats=%+v", stats)
+	}
+	ids, _ := st.GroupWordIDs(ctx, u.ID, g.ID)
+	if !slices.Equal(ids, []int64{apple.ID, pear.ID}) {
+		t.Fatalf("ids=%v", ids)
+	}
+}
+
+func TestImportRejectsUnknownGroupWordAndRollsBack(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	f := ExportFile{Format: "study-words", Version: 2, Notebooks: []ExportNotebook{{
+		Name:   "新本",
+		Words:  []ExportWord{{Word: "apple", Proficiency: 5}},
+		Groups: []ExportGroup{{Name: "动物", Words: []string{"ghost"}}},
+	}}}
+	if _, err := st.Import(ctx, u.ID, f, ImportMerge); err == nil {
+		t.Fatal("import should reject unknown group word")
+	}
+	nbs, _ := st.ListNotebooks(ctx, u.ID)
+	if len(nbs) != 1 || nbs[0].ID != nb.ID {
+		t.Fatalf("partial import: %+v", nbs)
+	}
+}
+
+func TestValidateExportRejectsBadGroups(t *testing.T) {
+	base := ExportNotebook{
+		Name:  "A",
+		Words: []ExportWord{{Word: "apple", Proficiency: 5}},
+	}
+	cases := []ExportNotebook{
+		{Name: "A", Words: base.Words, Groups: []ExportGroup{{Name: "", Words: []string{"apple"}}}},
+		{Name: "A", Words: base.Words, Groups: []ExportGroup{{Name: "动物", Words: []string{"ghost"}}}},
+		{Name: "A", Words: base.Words, Groups: []ExportGroup{{Name: "动物", Words: []string{"apple", "APPLE"}}}},
+		{Name: "A", Words: base.Words, Groups: []ExportGroup{{Name: "动物"}, {Name: "动物"}}},
+	}
+	for i, nb := range cases {
+		f := ExportFile{Format: "study-words", Version: 2, Notebooks: []ExportNotebook{nb}}
+		if err := ValidateExport(f); err == nil {
+			t.Errorf("case %d should be invalid", i)
+		}
+	}
+}
+
+func TestValidateExportAcceptsVersion2(t *testing.T) {
+	f := ExportFile{Format: "study-words", Version: 2, Notebooks: []ExportNotebook{{
+		Name:   "A",
+		Words:  []ExportWord{{Word: "apple", Proficiency: 5}},
+		Groups: []ExportGroup{{Name: "动物", Words: []string{"apple"}}},
+	}}}
+	if err := ValidateExport(f); err != nil {
+		t.Fatalf("valid v2 file rejected: %v", err)
+	}
+}
+
 func TestValidateExportRejectsMalformed(t *testing.T) {
 	cases := []ExportFile{
 		{Format: "other", Version: 1, Notebooks: []ExportNotebook{{Name: "a"}}},
-		{Format: "study-words", Version: 2, Notebooks: []ExportNotebook{{Name: "a"}}},
+		{Format: "study-words", Version: 3, Notebooks: []ExportNotebook{{Name: "a"}}},
 		{Format: "study-words", Version: 1},
 		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: ""}}},
 		{Format: "study-words", Version: 1, Notebooks: []ExportNotebook{{Name: "a", Words: []ExportWord{{Word: ""}}}}},
