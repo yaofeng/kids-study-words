@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 )
 
@@ -73,5 +74,96 @@ func TestWordGroupCascadesWithNotebook(t *testing.T) {
 	}
 	if _, err := st.WordGroupByID(ctx, u.ID, g.ID); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("group should cascade: %v", err)
+	}
+}
+
+func TestSetGroupWordsReplacesMembers(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	apple, _ := st.AddWord(ctx, nb.ID, Word{Word: "apple"})
+	pear, _ := st.AddWord(ctx, nb.ID, Word{Word: "pear"})
+	cat, _ := st.AddWord(ctx, nb.ID, Word{Word: "cat"})
+	g, _ := st.CreateWordGroup(ctx, nb.ID, "动物")
+
+	if err := st.SetGroupWords(ctx, u.ID, g.ID, []int64{pear.ID, apple.ID, apple.ID}); err != nil {
+		t.Fatal(err)
+	}
+	ids, err := st.GroupWordIDs(ctx, u.ID, g.ID)
+	if err != nil || !slices.Equal(ids, []int64{apple.ID, pear.ID}) {
+		t.Fatalf("ids=%v err=%v", ids, err)
+	}
+	if err := st.SetGroupWords(ctx, u.ID, g.ID, []int64{cat.ID}); err != nil {
+		t.Fatal(err)
+	}
+	ids, _ = st.GroupWordIDs(ctx, u.ID, g.ID)
+	if !slices.Equal(ids, []int64{cat.ID}) {
+		t.Fatalf("replace failed: %v", ids)
+	}
+	if err := st.SetGroupWords(ctx, u.ID, g.ID, nil); err != nil {
+		t.Fatal(err)
+	}
+	ids, _ = st.GroupWordIDs(ctx, u.ID, g.ID)
+	if len(ids) != 0 {
+		t.Fatalf("clear failed: %v", ids)
+	}
+}
+
+func TestSetGroupWordsRejectsForeignWord(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	other, _ := st.CreateNotebook(ctx, u.ID, "另一本")
+	foreign, _ := st.AddWord(ctx, other.ID, Word{Word: "dog"})
+	g, _ := st.CreateWordGroup(ctx, nb.ID, "动物")
+	if err := st.SetGroupWords(ctx, u.ID, g.ID, []int64{foreign.ID}); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("foreign word: %v", err)
+	}
+}
+
+func TestGroupMembershipsMapsWordsToGroups(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	apple, _ := st.AddWord(ctx, nb.ID, Word{Word: "apple"})
+	pear, _ := st.AddWord(ctx, nb.ID, Word{Word: "pear"})
+	animals, _ := st.CreateWordGroup(ctx, nb.ID, "动物")
+	food, _ := st.CreateWordGroup(ctx, nb.ID, "食物")
+	_ = st.SetGroupWords(ctx, u.ID, animals.ID, []int64{apple.ID, pear.ID})
+	_ = st.SetGroupWords(ctx, u.ID, food.ID, []int64{apple.ID})
+
+	m, err := st.GroupMemberships(ctx, nb.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(m[apple.ID]) != 2 || len(m[pear.ID]) != 1 {
+		t.Fatalf("memberships=%+v", m)
+	}
+}
+
+func TestGroupCascadesWithWordAndGroup(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, _ := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	apple, _ := st.AddWord(ctx, nb.ID, Word{Word: "apple"})
+	g, _ := st.CreateWordGroup(ctx, nb.ID, "动物")
+	_ = st.SetGroupWords(ctx, u.ID, g.ID, []int64{apple.ID})
+
+	if err := st.DeleteWord(ctx, nb.ID, apple.ID); err != nil {
+		t.Fatal(err)
+	}
+	m, _ := st.GroupMemberships(ctx, nb.ID)
+	if len(m) != 0 {
+		t.Fatalf("word delete should cascade: %+v", m)
+	}
+
+	pear, _ := st.AddWord(ctx, nb.ID, Word{Word: "pear"})
+	_ = st.SetGroupWords(ctx, u.ID, g.ID, []int64{pear.ID})
+	if err := st.DeleteWordGroup(ctx, u.ID, g.ID); err != nil {
+		t.Fatal(err)
+	}
+	ids, _ := st.GroupWordIDs(ctx, u.ID, g.ID)
+	if len(ids) != 0 {
+		t.Fatalf("group delete should cascade: %v", ids)
 	}
 }

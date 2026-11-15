@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -105,6 +106,113 @@ func (s *Store) RenameWordGroup(ctx context.Context, userID, groupID int64, name
 		return WordGroup{}, fmt.Errorf("rename word group: %w", err)
 	}
 	return s.WordGroupByID(ctx, userID, groupID)
+}
+
+// GroupWordIDs returns the word IDs in a group the user owns, sorted by ID.
+// A group with no members yields an empty, non-nil slice.
+func (s *Store) GroupWordIDs(ctx context.Context, userID, groupID int64) ([]int64, error) {
+	if _, err := s.WordGroupByID(ctx, userID, groupID); err != nil {
+		return nil, err
+	}
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT word_id FROM word_group_members WHERE group_id = ? ORDER BY word_id`, groupID)
+	if err != nil {
+		return nil, fmt.Errorf("list group words: %w", err)
+	}
+	defer rows.Close()
+
+	ids := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan group word: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+// SetGroupWords replaces a group's members with wordIDs, which must all belong
+// to the group's notebook. Duplicate IDs are ignored; nil clears the group.
+// WordGroupByID runs before the transaction because the pool holds a single
+// connection; no s.db call may happen inside the transaction.
+func (s *Store) SetGroupWords(ctx context.Context, userID, groupID int64, wordIDs []int64) error {
+	g, err := s.WordGroupByID(ctx, userID, groupID)
+	if err != nil {
+		return err
+	}
+
+	ids := append([]int64(nil), wordIDs...)
+	slices.Sort(ids)
+	ids = slices.Compact(ids)
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin: %w", err)
+	}
+	defer tx.Rollback()
+
+	if len(ids) > 0 {
+		placeholders := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
+		args := make([]any, 0, len(ids)+1)
+		args = append(args, g.NotebookID)
+		for _, id := range ids {
+			args = append(args, id)
+		}
+		var count int
+		if err := tx.QueryRowContext(ctx,
+			`SELECT COUNT(*) FROM words WHERE notebook_id = ? AND id IN (`+placeholders+`)`,
+			args...).Scan(&count); err != nil {
+			return fmt.Errorf("check group words: %w", err)
+		}
+		if count != len(ids) {
+			return ErrNotFound
+		}
+	}
+
+	if _, err := tx.ExecContext(ctx,
+		`DELETE FROM word_group_members WHERE group_id = ?`, groupID); err != nil {
+		return fmt.Errorf("clear group members: %w", err)
+	}
+	for _, id := range ids {
+		if _, err := tx.ExecContext(ctx,
+			`INSERT OR IGNORE INTO word_group_members (group_id, word_id) VALUES (?, ?)`,
+			groupID, id); err != nil {
+			return fmt.Errorf("add group member: %w", err)
+		}
+	}
+	return tx.Commit()
+}
+
+// GroupMemberships maps each word in a notebook to the groups containing it.
+// Words in no group are absent from the map.
+func (s *Store) GroupMemberships(ctx context.Context, notebookID int64) (map[int64][]WordGroup, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT m.word_id, g.id, g.notebook_id, g.name, g.created_at,
+		       (SELECT COUNT(*) FROM word_group_members m2 WHERE m2.group_id = g.id)
+		FROM word_group_members m
+		JOIN word_groups g ON g.id = m.group_id
+		WHERE g.notebook_id = ?
+		ORDER BY g.name COLLATE NOCASE, g.id`, notebookID)
+	if err != nil {
+		return nil, fmt.Errorf("group memberships: %w", err)
+	}
+	defer rows.Close()
+
+	out := make(map[int64][]WordGroup)
+	for rows.Next() {
+		var wordID int64
+		var g WordGroup
+		var created string
+		if err := rows.Scan(&wordID, &g.ID, &g.NotebookID, &g.Name, &created, &g.WordCount); err != nil {
+			return nil, fmt.Errorf("scan group membership: %w", err)
+		}
+		if err := scanTime(&g.CreatedAt, created); err != nil {
+			return nil, err
+		}
+		out[wordID] = append(out[wordID], g)
+	}
+	return out, rows.Err()
 }
 
 // DeleteWordGroup removes a group the user owns.
