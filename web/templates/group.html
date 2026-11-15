@@ -1,0 +1,49 @@
+{{define "content"}}
+<header class="page-head">
+  <a class="back-link" href="/notebooks/{{.Notebook.ID}}">← {{.Notebook.Name}}</a>
+  <div class="detail-head">
+    <div>
+      <h1 class="page-title">{{.Group.Name}}</h1>
+      <p class="page-subtitle">{{.Group.WordCount}} 个单词</p>
+    </div>
+    <div class="detail-actions">
+      <details class="settings-details group-rename">
+        <summary class="settings-summary">改名</summary>
+        <form method="post" action="/notebooks/{{.Notebook.ID}}/groups/{{.Group.ID}}/rename" class="form-stack settings-form">
+          {{template "csrf" .}}
+          <input class="input" type="text" name="name" value="{{.Group.Name}}" maxlength="40" required>
+          <button class="btn" type="submit">保存名称</button>
+        </form>
+      </details>
+      <form method="post" action="/notebooks/{{.Notebook.ID}}/groups/{{.Group.ID}}/delete">
+        {{template "csrf" .}}
+        <button class="btn btn-danger" type="submit" data-confirm="删除分组「{{.Group.Name}}」？单词不会被删除。">删除</button>
+      </form>
+    </div>
+  </div>
+</header>
+{{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
+<form method="post" action="/notebooks/{{.Notebook.ID}}/groups/{{.Group.ID}}/words" class="group-words-form">
+  {{template "csrf" .}}
+  {{if .Words}}
+  <ul class="group-word-list">
+    {{range .Words}}
+    <li class="card group-word-row">
+      <label class="choice group-word-choice">
+        <input type="checkbox" name="word_id" value="{{.ID}}"{{if .Checked}} checked{{end}}>
+        <span class="group-word-main">
+          <span class="word-en">{{.Word}}</span>
+          {{if .Phonetic}}<span class="word-phonetic">{{.Phonetic}}</span>{{end}}
+          <span class="word-translation">{{FirstLine .Translation}}</span>
+        </span>
+        <span class="group-word-stars">{{template "stars" .Proficiency}}</span>
+      </label>
+    </li>
+    {{end}}
+  </ul>
+  <button class="btn btn-primary btn-block" type="submit">保存</button>
+  {{else}}
+  <p class="card empty-state">这个生词本还没有单词，先去<a class="link" href="/lookup">查词</a>加入吧。</p>
+  {{end}}
+</form>
+{{end}}

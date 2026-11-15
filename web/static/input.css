@@ -369,6 +369,12 @@
   .group-chip { @apply gap-1 text-sm text-ink; }
   .group-count { @apply text-xs text-muted; }
   .word-groups { @apply mt-1 flex flex-wrap gap-1; }
+  .group-words-form { @apply flex flex-col gap-3; }
+  .group-word-list { @apply flex flex-col gap-2; }
+  .group-word-row { @apply p-3; }
+  .group-word-choice { @apply w-full items-center gap-3; }
+  .group-word-main { @apply flex min-w-0 flex-1 flex-col gap-0.5; }
+  .group-word-stars { @apply shrink-0; }
 
   .word-list {
     @apply flex flex-col gap-3;
