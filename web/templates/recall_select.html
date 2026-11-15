@@ -14,7 +14,7 @@
     </div>
     <p class="notebook-meta">{{.WordCount}} 个单词</p>
     {{if gt .WordCount 0}}
-    <a class="btn btn-primary" href="/recall/{{.ID}}">开始回忆</a>
+    <a class="btn btn-primary" href="/recall/{{.ID}}/start">开始回忆</a>
     {{else}}
     <p class="muted-text">还没有单词，先去<a class="link" href="/lookup">查词</a>加入吧。</p>
     {{end}}

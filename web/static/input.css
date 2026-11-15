@@ -531,6 +531,16 @@
     @apply flex flex-col gap-3;
   }
 
+  .scope-form { @apply flex flex-col gap-4; }
+  .scope-options { @apply flex flex-col gap-3; }
+  .scope-option { @apply flex items-start gap-3 rounded-2xl px-4 py-3 font-semibold; background: var(--glass-fill); border: 1px solid var(--glass-border); }
+  .scope-option input[type="radio"] { @apply mt-1 h-5 w-5 shrink-0 accent-blue; }
+  .scope-option.is-disabled { @apply opacity-50; }
+  .scope-name { @apply flex flex-1 flex-wrap items-center gap-2; }
+  .scope-count { @apply ml-auto text-sm text-muted; }
+  .scope-select { @apply inline-flex min-h-[36px] w-auto px-3 py-1; }
+  .scope-groups { @apply ml-8 flex flex-col gap-2; }
+
   .recall-head {
     @apply flex-row items-center justify-between;
   }

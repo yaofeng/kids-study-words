@@ -1,0 +1,49 @@
+{{define "content"}}
+<header class="page-head">
+  <a class="back-link" href="/notebooks/{{.Notebook.ID}}">← {{.Notebook.Name}}</a>
+  <h1 class="page-title">练哪些词？</h1>
+  <p class="page-subtitle">选好范围，这一轮就从里面抽词。</p>
+</header>
+{{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
+{{if .AllCount}}
+<form method="post" action="/recall/{{.Notebook.ID}}/start" class="card scope-form">
+  {{template "csrf" .}}
+  <fieldset class="scope-options">
+    <legend class="field-label">回忆范围</legend>
+    <label class="scope-option">
+      <input type="radio" name="scope" value="all"{{if .AllSelected}} checked{{end}}>
+      <span class="scope-name">全部</span>
+      <span class="scope-count">{{.AllCount}} 个</span>
+    </label>
+    <label class="scope-option">
+      <input type="radio" name="scope" value="proficiency"{{if .ProficiencySelected}} checked{{end}}>
+      <span class="scope-name">低于
+        <select class="input select scope-select" name="max" data-scope-proficiency>
+          {{range .Options}}<option value="{{.Level}}"{{if eq .Level $.MaxProficiency}} selected{{end}}>{{.Label}}（{{.Count}} 个）</option>{{end}}
+        </select>
+        的单词
+      </span>
+    </label>
+    <label class="scope-option{{if not .Groups}} is-disabled{{end}}">
+      <input type="radio" name="scope" value="groups"{{if .GroupsSelected}} checked{{end}}{{if not .Groups}} disabled{{end}}>
+      <span class="scope-name">分组</span>
+    </label>
+    {{if .Groups}}
+    <ul class="scope-groups">
+      {{range .Groups}}
+      <li><label class="choice"><input type="checkbox" name="group_id" value="{{.ID}}"{{if .Checked}} checked{{end}} data-scope-group><span>{{.Name}}（{{.WordCount}} 个）</span></label></li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="muted-text">还没有分组，先去生词本里建一个吧。</p>
+    {{end}}
+  </fieldset>
+  <button class="btn btn-primary btn-block" type="submit">开始回忆</button>
+</form>
+{{else}}
+<section class="card empty-state">
+  {{template "owl" .}}
+  <p>这个生词本还没有单词，去<a class="link" href="/lookup">查词</a>加入吧。</p>
+</section>
+{{end}}
+{{end}}

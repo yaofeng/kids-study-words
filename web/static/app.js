@@ -90,3 +90,17 @@ document.addEventListener('change', (event) => {
   const el = event.target.closest('[data-auto-submit]');
   if (el && el.form) el.form.requestSubmit();
 });
+
+// Keep the scope radio in sync with the proficiency select and group boxes.
+document.addEventListener('change', (event) => {
+  const select = event.target.closest('[data-scope-proficiency]');
+  if (select) {
+    const radio = select.form.querySelector('input[name="scope"][value="proficiency"]');
+    if (radio) radio.checked = true;
+  }
+  const box = event.target.closest('[data-scope-group]');
+  if (box && box.checked) {
+    const radio = box.form.querySelector('input[name="scope"][value="groups"]');
+    if (radio) radio.checked = true;
+  }
+});
