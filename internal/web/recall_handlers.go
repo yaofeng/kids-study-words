@@ -26,10 +26,13 @@ type recallView struct {
 // summaryData feeds the end-of-round summary.
 type summaryData struct {
 	Base
-	Notebook store.Notebook
-	Known    int
-	Unknown  int
-	Total    int
+	Notebook       store.Notebook
+	Known          int
+	Unknown        int
+	Total          int
+	ScopeLabel     string
+	RestartURL     string
+	ChangeScopeURL string
 }
 
 func (s *Server) handleRecallSelect(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +193,8 @@ func (s *Server) handleRecallEnd(w http.ResponseWriter, r *http.Request) {
 	state := s.recall.Snapshot(userID)
 	s.recall.Reset(userID)
 	redirect := "/recall/" + strconv.FormatInt(nb.ID, 10) + "/summary?known=" +
-		strconv.Itoa(state.Known) + "&unknown=" + strconv.Itoa(state.Unknown)
+		strconv.Itoa(state.Known) + "&unknown=" + strconv.Itoa(state.Unknown) +
+		"&" + scopeQuery(state.Scope).Encode()
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
 }
 
@@ -213,16 +217,33 @@ func (s *Server) handleRecallSummary(w http.ResponseWriter, r *http.Request) {
 		s.renderError(w, r, http.StatusBadRequest, "统计数字不正确。")
 		return
 	}
+	scope, err := parseRecallScope(r.URL.Query())
+	if errors.Is(err, store.ErrInvalidScope) {
+		s.renderError(w, r, http.StatusBadRequest, "范围参数不对。")
+		return
+	}
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	groups, err := s.store.ListWordGroups(r.Context(), nb.ID)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	base, ok := s.pageData(w, r, "本轮小结", "recall")
 	if !ok {
 		return
 	}
 	_ = s.renderer.page(w, http.StatusOK, "summary", summaryData{
-		Base:     base,
-		Notebook: nb,
-		Known:    known,
-		Unknown:  unknown,
-		Total:    known + unknown,
+		Base:           base,
+		Notebook:       nb,
+		Known:          known,
+		Unknown:        unknown,
+		Total:          known + unknown,
+		ScopeLabel:     scopeLabel(scope, groups),
+		RestartURL:     "/recall/" + strconv.FormatInt(nb.ID, 10) + "/restart?" + scopeQuery(scope).Encode(),
+		ChangeScopeURL: changeScopeURL(nb.ID, scope),
 	})
 }
 
@@ -231,6 +252,39 @@ func (s *Server) handleRecallRestart(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	s.recall.Reset(currentUser(r).ID)
+	userID := currentUser(r).ID
+	scope, err := parseRecallScope(r.URL.Query())
+	if errors.Is(err, store.ErrInvalidScope) {
+		s.renderError(w, r, http.StatusBadRequest, "范围参数不对。")
+		return
+	}
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	startURL := "/recall/" + strconv.FormatInt(nb.ID, 10) + "/start?" + scopeQuery(scope).Encode()
+	groupsOK, err := s.scopeGroupsExist(r.Context(), nb.ID, scope)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if !groupsOK {
+		s.recall.Reset(userID)
+		setFlash(w, "这个范围里还没有单词，先换个范围吧。")
+		http.Redirect(w, r, startURL, http.StatusSeeOther)
+		return
+	}
+	words, err := s.store.ListRecallWords(r.Context(), nb.ID, scope)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if len(words) == 0 {
+		s.recall.Reset(userID)
+		setFlash(w, "这个范围里还没有单词，先换个范围吧。")
+		http.Redirect(w, r, startURL, http.StatusSeeOther)
+		return
+	}
+	s.recall.Start(userID, nb.ID, scope)
 	http.Redirect(w, r, "/recall/"+strconv.FormatInt(nb.ID, 10), http.StatusSeeOther)
 }

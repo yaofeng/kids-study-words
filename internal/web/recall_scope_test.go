@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
@@ -87,5 +88,76 @@ func TestScopeQueryAndLabel(t *testing.T) {
 	// scope names more groups than the notebook still has.
 	if got := scopeLabel(store.RecallScope{Kind: store.ScopeGroups, GroupIDs: []int64{1, 99, 100, 101}}, groups); got != "动物 等 4 组" {
 		t.Fatalf("label=%q", got)
+	}
+}
+
+func TestRecallEndPreservesScopeInSummary(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	apple, _ := tc.store.AddWord(context.Background(), tc.notebook.ID, store.Word{Word: "apple"})
+	g, _ := tc.store.CreateWordGroup(context.Background(), tc.notebook.ID, "动物")
+	_ = tc.store.SetGroupWords(context.Background(), tc.user.ID, g.ID, []int64{apple.ID})
+	start := tc.postForm(fmt.Sprintf("/recall/%d/start", tc.notebook.ID),
+		url.Values{"scope": {"groups"}, "group_id": {fmt.Sprint(g.ID)}})
+	if start.Code != http.StatusSeeOther {
+		t.Fatalf("start code=%d", start.Code)
+	}
+	end := tc.postForm(fmt.Sprintf("/recall/%d/end", tc.notebook.ID), url.Values{})
+	if end.Code != http.StatusSeeOther {
+		t.Fatalf("end code=%d", end.Code)
+	}
+	loc := end.Header().Get("Location")
+	if !strings.Contains(loc, "scope=groups") || !strings.Contains(loc, "group_id=") {
+		t.Fatalf("location=%s", loc)
+	}
+	body := tc.get(loc).Body.String()
+	if !strings.Contains(body, "本轮范围：动物") || !strings.Contains(body, "再来一轮") || !strings.Contains(body, "换个范围") {
+		t.Fatalf("summary=%s", body)
+	}
+}
+
+func TestRecallRestartUsesSameScope(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	apple, _ := tc.store.AddWord(context.Background(), tc.notebook.ID, store.Word{Word: "apple"})
+	pear, _ := tc.store.AddWord(context.Background(), tc.notebook.ID, store.Word{Word: "pear"})
+	g, _ := tc.store.CreateWordGroup(context.Background(), tc.notebook.ID, "动物")
+	_ = tc.store.SetGroupWords(context.Background(), tc.user.ID, g.ID, []int64{apple.ID})
+	loc := fmt.Sprintf("/recall/%d/restart?scope=groups&group_id=%d", tc.notebook.ID, g.ID)
+	resp := tc.get(loc)
+	if resp.Code != http.StatusSeeOther {
+		t.Fatalf("restart code=%d body=%s", resp.Code, resp.Body.String())
+	}
+	body := tc.get(resp.Header().Get("Location")).Body.String()
+	if !strings.Contains(body, "本轮范围：动物") || !strings.Contains(body, apple.Word) || strings.Contains(body, pear.Word) {
+		t.Fatalf("restart scope lost: %s", body)
+	}
+}
+
+func TestRecallRestartEmptyScopeReturnsToScopePage(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	_, _ = tc.store.AddWord(context.Background(), tc.notebook.ID, store.Word{Word: "apple", Proficiency: 5})
+	loc := fmt.Sprintf("/recall/%d/restart?scope=proficiency&max=2", tc.notebook.ID)
+	resp := tc.get(loc)
+	if resp.Code != http.StatusSeeOther {
+		t.Fatalf("code=%d", resp.Code)
+	}
+	if !strings.Contains(resp.Header().Get("Location"), "/start?") {
+		t.Fatalf("location=%s", resp.Header().Get("Location"))
+	}
+	page := tc.get(resp.Header().Get("Location")).Body.String()
+	if !strings.Contains(page, "这个范围里还没有单词") {
+		t.Fatalf("flash missing: %s", page)
+	}
+}
+
+func TestRecallRestartRejectsForeignGroup(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	other, _ := tc.store.CreateNotebook(context.Background(), tc.user.ID, "另一本")
+	g, _ := tc.store.CreateWordGroup(context.Background(), other.ID, "动物")
+	resp := tc.get(fmt.Sprintf("/recall/%d/restart?scope=groups&group_id=%d", tc.notebook.ID, g.ID))
+	if resp.Code != http.StatusSeeOther {
+		t.Fatalf("code=%d", resp.Code)
+	}
+	if !strings.Contains(resp.Header().Get("Location"), "/start?") {
+		t.Fatalf("location=%s", resp.Header().Get("Location"))
 	}
 }

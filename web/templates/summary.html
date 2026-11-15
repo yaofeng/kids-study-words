@@ -2,14 +2,15 @@
 <section class="card summary-card">
   {{template "owl" .}}
   <h1 class="auth-title">这一轮结束啦</h1>
-  <p class="auth-subtitle">{{.Notebook.Name}}</p>
+  <p class="auth-subtitle">{{.Notebook.Name}} · 本轮范围：{{.ScopeLabel}}</p>
   <ul class="summary-stats">
     <li><span class="stat-number is-known">{{.Known}}</span><span class="stat-label">认识 {{.Known}}</span></li>
     <li><span class="stat-number is-unknown">{{.Unknown}}</span><span class="stat-label">不认识 {{.Unknown}}</span></li>
     <li><span class="stat-number">{{.Total}}</span><span class="stat-label">共 {{.Total}} 次</span></li>
   </ul>
   <div class="detail-actions center-actions">
-    <a class="btn btn-primary" href="/recall/{{.Notebook.ID}}/restart">再来一轮</a>
+    <a class="btn btn-primary" href="{{.RestartURL}}">再来一轮</a>
+    <a class="btn" href="{{.ChangeScopeURL}}">换个范围</a>
     <a class="btn" href="/notebooks/{{.Notebook.ID}}">返回生词本</a>
   </div>
 </section>
