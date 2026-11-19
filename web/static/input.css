@@ -374,9 +374,19 @@
   }
 
   .group-section { @apply mb-5 flex flex-col gap-3; }
-  .group-head { @apply flex items-center justify-between gap-2; }
-  .group-title { @apply text-lg font-extrabold; }
+  .group-head { @apply flex min-w-0 items-center gap-2; }
+  .group-title { @apply shrink-0 text-lg font-extrabold; }
   .group-chips { @apply flex flex-wrap gap-2; }
+  .group-chips-inline { @apply flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-hidden; }
+  .group-chips-inline > li { @apply shrink-0; }
+
+  /* Fade the cut-off edge so it reads as "there is more" before 更多 appears. */
+  .group-chips-inline.is-clipped {
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
+    mask-image: linear-gradient(to right, #000 82%, transparent);
+  }
+  .group-more { @apply shrink-0; }
+  .group-chips-modal { @apply max-h-[60vh] flex-wrap overflow-y-auto; }
   .group-chip { @apply gap-1 text-sm text-ink; }
   .group-count { @apply text-xs text-muted; }
   .word-groups { @apply flex flex-wrap gap-1; }

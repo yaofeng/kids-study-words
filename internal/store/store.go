@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -48,11 +49,26 @@ func Open(ctx context.Context, path string) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}
+	if err := migrate(ctx, db); err != nil {
+		db.Close()
+		return nil, err
+	}
 	if err := db.PingContext(ctx); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("ping sqlite: %w", err)
 	}
 	return &Store{db: db}, nil
+}
+
+// migrate adds columns that schema.sql cannot add to an existing table.
+// ALTER TABLE reports "duplicate column name" on databases created with the
+// current schema, which is the only error it tolerates.
+func migrate(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, `ALTER TABLE word_groups ADD COLUMN last_viewed_at TEXT`)
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "duplicate column name") {
+		return fmt.Errorf("migrate word_groups: %w", err)
+	}
+	return nil
 }
 
 // Close releases the database connection.

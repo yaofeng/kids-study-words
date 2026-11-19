@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"slices"
 	"strings"
@@ -11,35 +12,42 @@ import (
 
 // WordGroup is a named collection of words inside a notebook.
 type WordGroup struct {
-	ID         int64
-	NotebookID int64
-	Name       string
-	CreatedAt  time.Time
-	WordCount  int
+	ID           int64
+	NotebookID   int64
+	Name         string
+	CreatedAt    time.Time
+	LastViewedAt *time.Time
+	WordCount    int
 }
 
-const wordGroupColumns = `g.id, g.notebook_id, g.name, g.created_at,
+const wordGroupColumns = `g.id, g.notebook_id, g.name, g.created_at, g.last_viewed_at,
 	(SELECT COUNT(*) FROM word_group_members m WHERE m.group_id = g.id)`
 
 func scanWordGroup(row interface{ Scan(...any) error }) (WordGroup, error) {
 	var g WordGroup
 	var created string
-	if err := row.Scan(&g.ID, &g.NotebookID, &g.Name, &created, &g.WordCount); err != nil {
+	var viewed sql.NullString
+	if err := row.Scan(&g.ID, &g.NotebookID, &g.Name, &created, &viewed, &g.WordCount); err != nil {
 		return WordGroup{}, mapNoRows(err)
 	}
 	if err := scanTime(&g.CreatedAt, created); err != nil {
 		return WordGroup{}, err
 	}
+	if err := scanNullTime(&g.LastViewedAt, viewed); err != nil {
+		return WordGroup{}, err
+	}
 	return g, nil
 }
 
-// ListWordGroups returns a notebook's groups ordered by name, then id.
+// ListWordGroups returns a notebook's groups, most recently viewed first.
+// Groups never opened come after those that have, ordered by name.
 func (s *Store) ListWordGroups(ctx context.Context, notebookID int64) ([]WordGroup, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT `+wordGroupColumns+`
 		FROM word_groups g
 		WHERE g.notebook_id = ?
-		ORDER BY g.name COLLATE NOCASE, g.id`, notebookID)
+		ORDER BY g.last_viewed_at IS NULL, g.last_viewed_at DESC,
+		         g.name COLLATE NOCASE, g.id`, notebookID)
 	if err != nil {
 		return nil, fmt.Errorf("list word groups: %w", err)
 	}
@@ -116,6 +124,19 @@ func (s *Store) RenameWordGroup(ctx context.Context, userID, groupID int64, name
 		return WordGroup{}, fmt.Errorf("rename word group: %w", err)
 	}
 	return s.WordGroupByID(ctx, userID, groupID)
+}
+
+// TouchWordGroupViewed records that the user opened a group, which orders the
+// group list by recency.
+func (s *Store) TouchWordGroupViewed(ctx context.Context, userID, groupID int64) error {
+	if _, err := s.WordGroupByID(ctx, userID, groupID); err != nil {
+		return err
+	}
+	if _, err := s.db.ExecContext(ctx,
+		`UPDATE word_groups SET last_viewed_at = ? WHERE id = ?`, formatTime(TimeNow()), groupID); err != nil {
+		return fmt.Errorf("touch word group: %w", err)
+	}
+	return nil
 }
 
 // GroupWordIDs returns the word IDs in a group the user owns, sorted by ID.

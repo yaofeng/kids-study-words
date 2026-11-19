@@ -66,10 +66,11 @@ CREATE TABLE IF NOT EXISTS ai_example_cache (
 );
 
 CREATE TABLE IF NOT EXISTS word_groups (
-  id          INTEGER PRIMARY KEY,
-  notebook_id INTEGER NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,
-  created_at  TEXT NOT NULL,
+  id             INTEGER PRIMARY KEY,
+  notebook_id    INTEGER NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+  name           TEXT NOT NULL,
+  created_at     TEXT NOT NULL,
+  last_viewed_at TEXT,
   UNIQUE (notebook_id, name COLLATE NOCASE)
 );
 

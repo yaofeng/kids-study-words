@@ -23,18 +23,34 @@
 <section class="group-section">
   <div class="group-head">
     <h2 class="group-title">分组</h2>
+    {{if .Groups}}
+    <ul class="group-chips-inline" data-group-chips>
+      {{range .Groups}}
+      <li><a class="badge group-chip" href="/notebooks/{{$.Notebook.ID}}/groups/{{.ID}}">{{.Name}} <span class="group-count">{{.WordCount}}</span></a></li>
+      {{end}}
+    </ul>
+    <button class="btn btn-small group-more" type="button" data-open-dialog="all-groups" data-group-more hidden>更多</button>
+    {{else}}
+    <p class="muted-text">还没有分组。</p>
+    {{end}}
   </div>
   {{if .GroupError}}<p class="alert alert-error" role="alert">{{.GroupError}}</p>{{end}}
-  {{if .Groups}}
-  <ul class="group-chips">
-    {{range .Groups}}
-    <li><a class="badge group-chip" href="/notebooks/{{$.Notebook.ID}}/groups/{{.ID}}">{{.Name}} <span class="group-count">{{.WordCount}}</span></a></li>
-    {{end}}
-  </ul>
-  {{else}}
-  <p class="muted-text">还没有分组。</p>
-  {{end}}
 </section>
+{{if .Groups}}
+<dialog class="modal" id="all-groups" aria-labelledby="all-groups-title">
+  <div class="modal-body">
+    <h2 class="modal-title" id="all-groups-title">全部分组</h2>
+    <ul class="group-chips group-chips-modal">
+      {{range .Groups}}
+      <li><a class="badge group-chip" href="/notebooks/{{$.Notebook.ID}}/groups/{{.ID}}">{{.Name}} <span class="group-count">{{.WordCount}}</span></a></li>
+      {{end}}
+    </ul>
+    <div class="modal-actions">
+      <button class="btn" type="button" data-close-dialog>关闭</button>
+    </div>
+  </div>
+</dialog>
+{{end}}
 <dialog class="modal" id="create-group" aria-labelledby="create-group-title">
   <form method="post" action="/notebooks/{{.Notebook.ID}}/groups" class="modal-body">
     {{template "csrf" .}}

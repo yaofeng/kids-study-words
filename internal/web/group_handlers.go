@@ -2,6 +2,7 @@ package web
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"unicode/utf8"
@@ -183,6 +184,15 @@ func (s *Server) handleGroupPage(w http.ResponseWriter, r *http.Request) {
 	g, ok := s.loadGroup(w, r, nb)
 	if !ok {
 		return
+	}
+	// Opening a group makes it the most recently viewed one on the notebook
+	// page. A failed touch must not block the page.
+	if err := s.store.TouchWordGroupViewed(r.Context(), currentUser(r).ID, g.ID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			s.renderError(w, r, http.StatusNotFound, "分组不存在。")
+			return
+		}
+		slog.Warn("touch group view", "group", g.ID, "err", err)
 	}
 	s.renderGroupView(w, r, http.StatusOK, nb, g, "")
 }

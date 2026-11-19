@@ -69,6 +69,59 @@ func TestNotebookCreateGroupUsesModal(t *testing.T) {
 	}
 }
 
+func TestNotebookGroupChipsShareTitleRow(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	if _, err := tc.store.CreateWordGroup(context.Background(), tc.notebook.ID, "动物"); err != nil {
+		t.Fatal(err)
+	}
+	body := tc.get(fmt.Sprintf("/notebooks/%d", tc.notebook.ID)).Body.String()
+	headAt := strings.Index(body, `class="group-head"`)
+	if headAt < 0 {
+		t.Fatalf("group head missing: %s", body)
+	}
+	head := body[headAt:]
+	titleAt := strings.Index(head, `class="group-title"`)
+	chipsAt := strings.Index(head, "group-chips-inline")
+	moreAt := strings.Index(head, "data-group-more")
+	if titleAt < 0 || chipsAt < 0 || moreAt < 0 {
+		t.Fatalf("title, chips, and more button should share one row: %s", head)
+	}
+	if !(titleAt < chipsAt && chipsAt < moreAt) {
+		t.Fatalf("expected title → chips → more order: %d %d %d", titleAt, chipsAt, moreAt)
+	}
+	// The modal holding every group is rendered for the more button.
+	if !strings.Contains(body, `id="all-groups"`) || !strings.Contains(body, "全部分组") {
+		t.Fatalf("all-groups modal missing: %s", body)
+	}
+}
+
+func TestNotebookGroupsSortByLastViewed(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	if _, err := tc.store.CreateWordGroup(context.Background(), tc.notebook.ID, "动物"); err != nil {
+		t.Fatal(err)
+	}
+	viewed, err := tc.store.CreateWordGroup(context.Background(), tc.notebook.ID, "食物")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Opening a group page makes it the most recently viewed group.
+	if resp := tc.get(fmt.Sprintf("/notebooks/%d/groups/%d", tc.notebook.ID, viewed.ID)); resp.Code != http.StatusOK {
+		t.Fatalf("group page code=%d", resp.Code)
+	}
+	body := tc.get(fmt.Sprintf("/notebooks/%d", tc.notebook.ID)).Body.String()
+	chipsAt := strings.Index(body, "group-chips-inline")
+	if chipsAt < 0 {
+		t.Fatalf("inline chips missing: %s", body)
+	}
+	chips := body[chipsAt:]
+	chips = chips[:strings.Index(chips, "</ul>")]
+	foodAt := strings.Index(chips, "食物")
+	animalAt := strings.Index(chips, "动物")
+	if foodAt < 0 || animalAt < 0 || foodAt > animalAt {
+		t.Fatalf("viewed group should come first: %s", chips)
+	}
+}
+
 func TestNotebookPageShowsWordGroupBadges(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	w := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")

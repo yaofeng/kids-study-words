@@ -8,6 +8,44 @@ import (
 	"testing"
 )
 
+func TestListWordGroupsOrdersByLastViewed(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	u, nb, err := st.CreateFirstUser(ctx, "parent", "hash", "默认生词本")
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := st.CreateWordGroup(ctx, nb.ID, "苹果")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := st.CreateWordGroup(ctx, nb.ID, "香蕉")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Never-viewed groups fall back to name order.
+	groups, err := st.ListWordGroups(ctx, nb.ID)
+	if err != nil || len(groups) != 2 || groups[0].ID != first.ID {
+		t.Fatalf("groups=%+v err=%v", groups, err)
+	}
+	if err := st.TouchWordGroupViewed(ctx, u.ID, second.ID); err != nil {
+		t.Fatal(err)
+	}
+	groups, err = st.ListWordGroups(ctx, nb.ID)
+	if err != nil || len(groups) != 2 {
+		t.Fatalf("groups=%+v err=%v", groups, err)
+	}
+	if groups[0].ID != second.ID || groups[1].ID != first.ID {
+		t.Fatalf("viewed group should come first: %+v", groups)
+	}
+	if groups[0].LastViewedAt == nil {
+		t.Fatal("last viewed time not recorded")
+	}
+	if err := st.TouchWordGroupViewed(ctx, u.ID+1, second.ID); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("foreign touch: %v", err)
+	}
+}
+
 func TestWordGroupCRUD(t *testing.T) {
 	st := newTestStore(t)
 	ctx := context.Background()

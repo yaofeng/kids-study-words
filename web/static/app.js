@@ -138,6 +138,21 @@ document.addEventListener('click', (event) => {
   }
 });
 
+// Show 更多 only when the inline group chips overflow their row.
+function updateGroupChips() {
+  document.querySelectorAll('[data-group-chips]').forEach((list) => {
+    const more = list.parentElement.querySelector('[data-group-more]');
+    if (!more) return;
+    const overflowing = list.scrollWidth > list.clientWidth + 1;
+    more.hidden = !overflowing;
+    list.classList.toggle('is-clipped', overflowing);
+  });
+}
+
+updateGroupChips();
+window.addEventListener('load', updateGroupChips);
+window.addEventListener('resize', updateGroupChips);
+
 // Submit filter forms when their select changes, without inline handlers.
 document.addEventListener('change', (event) => {
   const el = event.target.closest('[data-auto-submit]');
