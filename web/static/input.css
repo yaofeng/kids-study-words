@@ -376,11 +376,10 @@
   .group-section { @apply mb-5 flex flex-col gap-3; }
   .group-head { @apply flex items-center justify-between gap-2; }
   .group-title { @apply text-lg font-extrabold; }
-  .group-create { @apply flex flex-col gap-2 sm:flex-row; }
   .group-chips { @apply flex flex-wrap gap-2; }
   .group-chip { @apply gap-1 text-sm text-ink; }
   .group-count { @apply text-xs text-muted; }
-  .word-groups { @apply mt-1 flex flex-wrap gap-1; }
+  .word-groups { @apply flex flex-wrap gap-1; }
   .group-words-form { @apply flex flex-col gap-3; }
   .group-word-list { @apply flex flex-col gap-2; }
   .group-word-row { @apply p-3; }
@@ -439,10 +438,6 @@
     @apply flex w-full shrink-0 snap-start items-start justify-between gap-3 p-4;
   }
 
-  .word-side {
-    @apply flex shrink-0 flex-col items-end gap-1 whitespace-nowrap text-xs text-muted;
-  }
-
   .word-delete {
     @apply flex w-24 shrink-0 snap-end;
   }
@@ -452,7 +447,21 @@
   }
 
   .word-main {
-    @apply flex min-w-0 flex-col gap-1;
+    @apply flex min-w-0 flex-1 flex-col gap-1;
+  }
+
+  /* Stars share the word's line and hug the card's right edge. */
+  .word-stars {
+    @apply ml-auto shrink-0;
+  }
+
+  /* Review count shares the final line with the group badges, right-aligned. */
+  .word-foot {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .word-review {
+    @apply ml-auto whitespace-nowrap text-xs text-muted;
   }
 
   .word-en {

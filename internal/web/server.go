@@ -164,6 +164,7 @@ func (s *Server) routes(staticFS fs.FS) http.Handler {
 	mux.HandleFunc("POST /notebooks/{id}/delete", s.handleDeleteNotebook)
 	mux.HandleFunc("POST /notebooks/{id}/groups", s.handleCreateGroup)
 	mux.HandleFunc("GET /notebooks/{id}/groups/{groupID}", s.handleGroupPage)
+	mux.HandleFunc("GET /notebooks/{id}/groups/{groupID}/edit", s.handleGroupEditPage)
 	mux.HandleFunc("POST /notebooks/{id}/groups/{groupID}/rename", s.handleRenameGroup)
 	mux.HandleFunc("POST /notebooks/{id}/groups/{groupID}/delete", s.handleDeleteGroup)
 	mux.HandleFunc("POST /notebooks/{id}/groups/{groupID}/words", s.handleSaveGroupWords)

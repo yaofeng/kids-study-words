@@ -152,15 +152,19 @@ func TestNotebookWordShowsThreeLines(t *testing.T) {
 		t.Fatalf("word heading is not the word: %s", card)
 	}
 	wordAt := strings.Index(card, "apple")
-	zhAt := strings.Index(card, "n. 苹果")
-	metaAt := strings.Index(card, "加入于")
 	starsAt := strings.Index(card, "熟练度")
+	zhAt := strings.Index(card, "n. 苹果")
 	countAt := strings.Index(card, "回忆 1 次")
-	if wordAt < 0 || zhAt < 0 || metaAt < 0 || starsAt < 0 || countAt < 0 {
+	if wordAt < 0 || starsAt < 0 || zhAt < 0 || countAt < 0 {
 		t.Fatalf("missing line content: %s", body)
 	}
-	if !(wordAt < zhAt && zhAt < metaAt && metaAt < starsAt && starsAt < countAt) {
-		t.Fatalf("expected word → chinese → meta order: %d %d %d %d %d", wordAt, zhAt, metaAt, starsAt, countAt)
+	// Stars sit on the word's line, above the translation; the review count
+	// follows the translation on the last line.
+	if !(wordAt < starsAt && starsAt < zhAt && zhAt < countAt) {
+		t.Fatalf("expected word → stars → chinese → review order: %d %d %d %d", wordAt, starsAt, zhAt, countAt)
+	}
+	if strings.Contains(card, "加入于") {
+		t.Fatalf("added date should no longer be shown: %s", card)
 	}
 }
 
@@ -211,6 +215,18 @@ func TestNotebookDefaultBadgeFollowsName(t *testing.T) {
 	}
 }
 
+func TestNotebookWordCardShowsWholeTranslation(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	tc.seedWord(tc.notebook.ID, "cat", "n. 猫\n[计] 计算机辅助教育")
+	body := tc.get(fmt.Sprintf("/notebooks/%d", tc.notebook.ID)).Body.String()
+	// The card must show every translation line, not just the first one.
+	for _, line := range []string{"n. 猫", "[计] 计算机辅助教育"} {
+		if !strings.Contains(body, line) {
+			t.Fatalf("missing translation line %q in card: %s", line, body)
+		}
+	}
+}
+
 func TestNotebookWordCardUsesSwipeLayout(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	w := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
@@ -218,7 +234,9 @@ func TestNotebookWordCardUsesSwipeLayout(t *testing.T) {
 	for _, want := range []string{
 		"word-swipe",
 		"word-content",
-		"word-side",
+		"word-stars",
+		"word-foot",
+		"word-review",
 		fmt.Sprintf(`action="/notebooks/%d/words/%d/delete"`, tc.notebook.ID, w.ID),
 	} {
 		if !strings.Contains(body, want) {

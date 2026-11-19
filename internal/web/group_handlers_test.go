@@ -40,6 +40,35 @@ func TestCreateGroupDuplicateShowsError(t *testing.T) {
 	}
 }
 
+func TestNotebookCreateGroupUsesModal(t *testing.T) {
+	tc := newAuthedTestClient(t)
+	body := tc.get(fmt.Sprintf("/notebooks/%d", tc.notebook.ID)).Body.String()
+	for _, want := range []string{
+		`data-open-dialog="create-group"`,
+		`id="create-group"`,
+		fmt.Sprintf(`action="/notebooks/%d/groups"`, tc.notebook.ID),
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("missing %q in notebook page: %s", want, body)
+		}
+	}
+	// The old inline create form should be gone.
+	if strings.Contains(body, "group-create") {
+		t.Fatalf("inline group form should be replaced by the modal: %s", body)
+	}
+	// The create button sits between 去查词 and 开始回忆 in the page header.
+	actionsAt := strings.Index(body, `class="detail-actions"`)
+	lookupAt := strings.Index(body[actionsAt:], `href="/lookup"`)
+	createAt := strings.Index(body[actionsAt:], `data-open-dialog="create-group"`)
+	recallAt := strings.Index(body[actionsAt:], fmt.Sprintf(`href="/recall/%d/start"`, tc.notebook.ID))
+	if actionsAt < 0 || lookupAt < 0 || createAt < 0 || recallAt < 0 {
+		t.Fatalf("header actions missing: %s", body)
+	}
+	if !(lookupAt < createAt && createAt < recallAt) {
+		t.Fatalf("create button should sit between lookup and recall: %d %d %d", lookupAt, createAt, recallAt)
+	}
+}
+
 func TestNotebookPageShowsWordGroupBadges(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	w := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
@@ -64,22 +93,38 @@ func TestCreateGroupRejectsForeignNotebook(t *testing.T) {
 	}
 }
 
-func TestGroupPageShowsWordsAndSavesMembers(t *testing.T) {
+func TestGroupPagesBrowseAndEditMembers(t *testing.T) {
 	tc := newAuthedTestClient(t)
 	a := tc.seedWord(tc.notebook.ID, "apple", "n. 苹果")
 	b := tc.seedWord(tc.notebook.ID, "pear", "n. 梨")
 	g, _ := tc.store.CreateWordGroup(context.Background(), tc.notebook.ID, "动物")
 	path := fmt.Sprintf("/notebooks/%d/groups/%d", tc.notebook.ID, g.ID)
 
+	// Browse page: read-only, no words until the group gets members.
 	body := tc.get(path).Body.String()
-	if !strings.Contains(body, "apple") || !strings.Contains(body, "pear") || !strings.Contains(body, "保存") {
-		t.Fatalf("page=%s", body)
+	if strings.Contains(body, `type="checkbox"`) || strings.Contains(body, ">保存<") {
+		t.Fatalf("browse page should be read-only: %s", body)
+	}
+	if !strings.Contains(body, "这个分组还没有单词") {
+		t.Fatalf("empty group message missing: %s", body)
+	}
+	if !strings.Contains(body, fmt.Sprintf(`href="%s/edit"`, path)) {
+		t.Fatalf("edit entry missing from browse page: %s", body)
+	}
+
+	// Edit page lists every notebook word with checkboxes and a save button.
+	edit := tc.get(path + "/edit").Body.String()
+	for _, want := range []string{"apple", "pear", `type="checkbox"`, ">保存</button>"} {
+		if !strings.Contains(edit, want) {
+			t.Fatalf("missing %q on edit page: %s", want, edit)
+		}
 	}
 	// Same shadowing risk as the notebook page: the row heading must be the
 	// word text, never a dumped store.Word struct.
-	if !strings.Contains(body, `<span class="word-en">apple</span>`) {
-		t.Fatalf("group word heading is not the word: %s", body)
+	if !strings.Contains(edit, `<span class="word-en">apple</span>`) {
+		t.Fatalf("group word heading is not the word: %s", edit)
 	}
+
 	resp := tc.postForm(path+"/words", url.Values{"word_id": {fmt.Sprint(a.ID), fmt.Sprint(b.ID)}})
 	if resp.Code != http.StatusSeeOther {
 		t.Fatalf("code=%d body=%s", resp.Code, resp.Body.String())
@@ -88,9 +133,22 @@ func TestGroupPageShowsWordsAndSavesMembers(t *testing.T) {
 	if !slices.Equal(ids, []int64{a.ID, b.ID}) {
 		t.Fatalf("ids=%v", ids)
 	}
+
 	body = tc.get(path).Body.String()
-	if strings.Count(body, "checked") < 2 {
-		t.Fatalf("checkboxes not checked: %s", body)
+	if !strings.Contains(body, `<span class="word-en">apple</span>`) || !strings.Contains(body, `<span class="word-en">pear</span>`) {
+		t.Fatalf("browse page should list the group's words: %s", body)
+	}
+	// Browse cards look like notebook cards but carry no group badges.
+	if strings.Contains(body, "word-groups") {
+		t.Fatalf("browse cards should not show group badges: %s", body)
+	}
+	if !strings.Contains(body, "word-stars") || !strings.Contains(body, "word-review") {
+		t.Fatalf("browse cards should match the notebook card: %s", body)
+	}
+
+	edit = tc.get(path + "/edit").Body.String()
+	if strings.Count(edit, "checked") < 2 {
+		t.Fatalf("checkboxes not checked: %s", edit)
 	}
 }
 
@@ -102,6 +160,9 @@ func TestGroupPageRejectsForeignGroup(t *testing.T) {
 
 	if resp := tc.get(base); resp.Code != http.StatusNotFound {
 		t.Fatalf("GET %s code=%d", base, resp.Code)
+	}
+	if resp := tc.get(base + "/edit"); resp.Code != http.StatusNotFound {
+		t.Fatalf("GET %s/edit code=%d", base, resp.Code)
 	}
 	for _, path := range []string{base + "/rename", base + "/delete", base + "/words"} {
 		resp := tc.postForm(path, url.Values{})

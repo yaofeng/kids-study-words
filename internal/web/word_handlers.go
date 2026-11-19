@@ -11,19 +11,23 @@ import (
 
 const maxExamples = 5
 
-// notebookWord pairs a word with the groups that contain it for the card badges.
-// Word is a named field, not an embedded store.Word: embedding would create an
-// outer field also called Word, shadowing the word's own Word string in templates.
-type notebookWord struct {
-	Word   store.Word
-	Groups []store.WordGroup
+// wordCard feeds the shared word_card partial. Word is a named field, not an
+// embedded store.Word: embedding would create an outer field also called Word,
+// shadowing the word's own Word string in templates. DeleteURL is empty on
+// read-only pages, which hides the swipe-to-delete form; Groups is empty when
+// the card must not show notebook group badges.
+type wordCard struct {
+	CSRF      string
+	DeleteURL string
+	Word      store.Word
+	Groups    []store.WordGroup
 }
 
 // notebookDetailData feeds web/templates/notebook.html.
 type notebookDetailData struct {
 	Base
 	Notebook   store.Notebook
-	Words      []notebookWord
+	Words      []wordCard
 	Groups     []store.WordGroup
 	Sort       string
 	GroupError string
@@ -65,6 +69,10 @@ func (s *Server) handleNotebookDetail(w http.ResponseWriter, r *http.Request) {
 // renderNotebookDetail renders the notebook page, optionally with a group error.
 func (s *Server) renderNotebookDetail(w http.ResponseWriter, r *http.Request, nb store.Notebook, sortKey, groupErr string) {
 	sortKey = validSort(sortKey)
+	base, ok := s.pageData(w, r, nb.Name, "notebooks")
+	if !ok {
+		return
+	}
 	words, err := s.store.ListWords(r.Context(), nb.ID, sortKey)
 	if err != nil {
 		s.fail(w, r, err)
@@ -80,13 +88,14 @@ func (s *Server) renderNotebookDetail(w http.ResponseWriter, r *http.Request, nb
 		s.fail(w, r, err)
 		return
 	}
-	out := make([]notebookWord, len(words))
+	out := make([]wordCard, len(words))
 	for i, w := range words {
-		out[i] = notebookWord{Word: w, Groups: members[w.ID]}
-	}
-	base, ok := s.pageData(w, r, nb.Name, "notebooks")
-	if !ok {
-		return
+		out[i] = wordCard{
+			CSRF:      base.CSRF,
+			DeleteURL: "/notebooks/" + itoa(nb.ID) + "/words/" + itoa(w.ID) + "/delete",
+			Word:      w,
+			Groups:    members[w.ID],
+		}
 	}
 	data := notebookDetailData{
 		Base:       base,

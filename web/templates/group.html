@@ -1,36 +1,24 @@
 {{define "content"}}
 <header class="page-head">
-  <a class="back-link" href="/notebooks/{{.Notebook.ID}}">← {{.Notebook.Name}}</a>
+  <a class="back-link" href="/notebooks/{{.Notebook.ID}}/groups/{{.Group.ID}}">← {{.Group.Name}}</a>
   <div class="detail-head">
     <div>
-      <h1 class="page-title">{{.Group.Name}}</h1>
-      <p class="page-subtitle">{{.Group.WordCount}} 个单词</p>
+      <h1 class="page-title">编辑分组</h1>
+      <p class="page-subtitle">{{.Group.Name}} · 已选 {{.Group.WordCount}} 个单词</p>
     </div>
     <div class="detail-actions">
-      <button class="btn" type="button" data-open-dialog="rename-group">改名</button>
       <form method="post" action="/notebooks/{{.Notebook.ID}}/groups/{{.Group.ID}}/delete">
         {{template "csrf" .}}
-        <button class="btn btn-danger" type="submit" data-confirm="删除分组「{{.Group.Name}}」？单词不会被删除。">删除</button>
+        <button class="btn btn-danger" type="submit" data-confirm="删除分组「{{.Group.Name}}」？单词不会被删除。">删除分组</button>
       </form>
     </div>
   </div>
 </header>
-<dialog class="modal" id="rename-group" aria-labelledby="rename-group-title">
-  <form method="post" action="/notebooks/{{.Notebook.ID}}/groups/{{.Group.ID}}/rename" class="modal-body">
-    {{template "csrf" .}}
-    <h2 class="modal-title" id="rename-group-title">分组改名</h2>
-    <label class="muted-text" for="rename-group-name">名称</label>
-    <input class="input" id="rename-group-name" type="text" name="name" value="{{.Group.Name}}" maxlength="40" required>
-    <div class="modal-actions">
-      <button class="btn" type="button" data-close-dialog>取消</button>
-      <button class="btn btn-primary" type="submit">保存名称</button>
-    </div>
-  </form>
-</dialog>
 {{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
 <form method="post" action="/notebooks/{{.Notebook.ID}}/groups/{{.Group.ID}}/words" class="group-words-form">
   {{template "csrf" .}}
   {{if .Words}}
+  <p class="muted-text">勾选这个分组里的单词，然后保存。</p>
   <ul class="group-word-list">
     {{range .Words}}
     <li class="card group-word-row">

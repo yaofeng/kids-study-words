@@ -65,6 +65,37 @@
 
 {{define "stars"}}<span class="stars" role="img" aria-label="{{StarLabel .}}">{{range Stars .}}<span class="star star-{{.Fill}}" aria-hidden="true"></span>{{end}}</span>{{end}}
 
+{{define "word_card"}}
+<li class="card word-card">
+  <div class="word-swipe">
+    <div class="word-content">
+      <div class="word-main">
+        <div class="word-line">
+          <span class="word-en">{{.Word.Word}}</span>
+          {{if .Word.Phonetic}}<span class="word-phonetic">{{.Word.Phonetic}}</span>{{end}}
+          <span class="word-stars">{{template "stars" .Word.Proficiency}}</span>
+        </div>
+        {{if .Word.Translation}}
+        <ul class="word-translation translation-lines">
+          {{range Lines .Word.Translation}}<li>{{.}}</li>{{end}}
+        </ul>
+        {{end}}
+        <div class="word-foot">
+          {{if .Groups}}<p class="word-groups">{{range .Groups}}<span class="badge">{{.Name}}</span>{{end}}</p>{{end}}
+          <span class="word-review">回忆 {{.Word.ReviewCount}} 次</span>
+        </div>
+      </div>
+    </div>
+    {{if .DeleteURL}}
+    <form method="post" action="{{.DeleteURL}}" class="word-delete">
+      {{template "csrf" .}}
+      <button type="submit" data-confirm="删除单词「{{.Word.Word}}」？">删除</button>
+    </form>
+    {{end}}
+  </div>
+</li>
+{{end}}
+
 {{define "owl"}}<svg class="owl" viewBox="0 0 120 120" role="img" aria-label="小猫头鹰" fill="none" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="60" cy="66" rx="38" ry="40" fill="#FFD966" stroke="#1E2D42" stroke-width="4"/>
   <path d="M26 34 L38 46 L22 50 Z" fill="#FF9F80" stroke="#1E2D42" stroke-width="4" stroke-linejoin="round"/>
